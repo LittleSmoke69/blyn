@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --green: #32c489;
+  --green-dark: #178f5f;
+  --sidebar-bg: #0b120f;
+  --sidebar-active-bg: #32c489;
+  --sidebar-active-text: #0b120f;
+  --sidebar-text: #aab6b0;
+  --sidebar-text-hover: #ffffff;
+  --sidebar-border: #1c2622;
+
+  --bg: #f3f5f4;
+  --card: #ffffff;
+  --border: #e5e9e7;
+  --text: #0f1b16;
+  --muted: #6b7873;
+  --red: #e0504a;
+
+  --radius-lg: 16px;
+  --radius-md: 12px;
+}
+
+@theme {
+  --color-green: var(--green);
+  --color-green-dark: var(--green-dark);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-active-bg: var(--sidebar-active-bg);
+  --color-sidebar-active-text: var(--sidebar-active-text);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-sidebar-text-hover: var(--sidebar-text-hover);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-red: var(--red);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Barlow", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: "Archivo", "Arial Black", system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
