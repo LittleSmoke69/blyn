@@ -12,7 +12,8 @@
 //   - activate_subscription: ativa um plano mensal ou anual, calculando
 //     expires_at a partir do billing_cycle.
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
-import { getAdminClient, getCallerClient } from "../_shared/supabaseAdmin.ts";
+import { getAdminClient } from "../_shared/supabaseAdmin.ts";
+import { AdminAuthError, requireAdmin } from "../_shared/requireAdmin.ts";
 
 interface Payload {
   action: "create" | "update" | "activate_subscription";
@@ -30,19 +31,6 @@ const CYCLE_TO_INTERVAL: Record<string, string> = {
   annual: "1 year",
 };
 
-async function requireAdmin(req: Request) {
-  const caller = getCallerClient(req);
-  const { data: userData, error } = await caller.auth.getUser();
-  if (error || !userData.user) {
-    throw { status: 401, message: "não autenticado" };
-  }
-  const { data: allowed } = await caller.rpc("is_admin", { uid: userData.user.id });
-  if (!allowed) {
-    throw { status: 403, message: "só administradores da plataforma podem usar esse painel" };
-  }
-  return userData.user.id;
-}
-
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
@@ -54,8 +42,10 @@ Deno.serve(async (req) => {
   try {
     await requireAdmin(req);
   } catch (err) {
-    const e = err as { status?: number; message?: string };
-    return jsonResponse({ error: e.message ?? "falha de autorização" }, e.status ?? 403);
+    if (err instanceof AdminAuthError) {
+      return jsonResponse({ error: err.message }, err.status);
+    }
+    return jsonResponse({ error: "falha de autorização" }, 403);
   }
 
   let payload: Payload;

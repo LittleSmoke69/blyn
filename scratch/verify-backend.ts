@@ -375,20 +375,44 @@ async function main() {
   const daysUntilExpiry = (new Date(activateJson.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
   assert(daysUntilExpiry > 360 && daysUntilExpiry < 370, "expires_at calculado para ~1 ano a partir de hoje");
 
-  console.log("\n=== 12. webhook de eventos ===");
-  const webhookResp = await fetch(`${GATEWAY_URL}/functions/v1/mercado-pago-webhook`, {
+  console.log("\n=== 12. webhooks de eventos (produção e teste, separados) ===");
+  const prodWebhookResp = await fetch(`${GATEWAY_URL}/functions/v1/mercado-pago-webhook`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "payment", data: { id: "123456789" } }),
+    body: JSON.stringify({ type: "payment", data: { id: "prod-123456789" } }),
   });
-  assert(webhookResp.status === 200, "webhook do Mercado Pago responde 200");
+  assert(prodWebhookResp.status === 200, "webhook de PRODUÇÃO responde 200");
+
+  const testWebhookResp = await fetch(`${GATEWAY_URL}/functions/v1/mercado-pago-webhook-test`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "payment", data: { id: "test-987654321" } }),
+  });
+  assert(testWebhookResp.status === 200, "webhook de TESTE responde 200");
 
   await new Promise((r) => setTimeout(r, 200));
   const { data: eventsSeenByAdmin } = await adminUser.client.from("webhook_events").select("*").eq("source", "mercado_pago");
-  assert((eventsSeenByAdmin?.length ?? 0) > 0, "admin vê o evento de webhook logado");
+  const prodEvents = (eventsSeenByAdmin ?? []).filter((e) => e.environment === "production");
+  const testEvents = (eventsSeenByAdmin ?? []).filter((e) => e.environment === "test");
+  assert(prodEvents.length > 0, "evento de produção gravado com environment='production'");
+  assert(testEvents.length > 0, "evento de teste gravado com environment='test', sem se misturar com produção");
 
   const { data: eventsSeenByOwner } = await ownerA.client.from("webhook_events").select("*");
   assert((eventsSeenByOwner?.length ?? 0) === 0, "owner (não-admin) não enxerga webhook_events");
+
+  console.log("\n=== 13. URLs de webhook (com domínio da aplicação, não o host do Supabase) ===");
+  const urlsResp = await fetch(`${GATEWAY_URL}/functions/v1/admin-get-webhook-urls`, {
+    headers: { Authorization: `Bearer ${(await adminUser.client.auth.getSession()).data.session?.access_token}` },
+  });
+  const urlsJson = await urlsResp.json();
+  assert(urlsResp.status === 200, `admin consegue consultar as URLs de webhook (${JSON.stringify(urlsJson)})`);
+  assert(!!urlsJson.production?.url && !!urlsJson.test?.url, "resposta traz URL de produção e de teste separadas");
+  assert(!urlsJson.production.url.includes("supabase"), "URL exposta não menciona o host do Supabase");
+
+  const nonAdminUrlsResp = await fetch(`${GATEWAY_URL}/functions/v1/admin-get-webhook-urls`, {
+    headers: { Authorization: `Bearer ${(await ownerA.client.auth.getSession()).data.session?.access_token}` },
+  });
+  assert(nonAdminUrlsResp.status === 403, "não-admin não consegue consultar as URLs de webhook");
 
   console.log(`\n=== resultado: ${passed} passaram, ${failed} falharam ===\n`);
   if (failed > 0) process.exit(1);

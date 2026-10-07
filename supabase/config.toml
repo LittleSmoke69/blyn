@@ -374,6 +374,9 @@ verify_jwt = false
 [functions.mercado-pago-webhook]
 verify_jwt = false
 
+[functions.mercado-pago-webhook-test]
+verify_jwt = false
+
 # O gateway recebe tanto chamadas anônimas (signup, cardápio público) quanto
 # autenticadas (CRUD do dashboard) — ele mesmo decide o que fazer com o
 # Authorization recebido e repassa pro Kong; não faz sentido o edge runtime
