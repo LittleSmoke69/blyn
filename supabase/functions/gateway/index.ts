@@ -26,7 +26,9 @@ import { corsHeaders, handleOptions } from "../_shared/cors.ts";
 const KONG_INTERNAL_URL = Deno.env.get("KONG_INTERNAL_URL") ?? "http://kong:8000";
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 
-const FUNCTION_PREFIX = "/functions/v1/gateway";
+// No Supabase Cloud/CLI a função recebe o path completo; no self-hosted o
+// Envoy/Kong já tira o "/functions/v1" e ela recebe só "/gateway/...".
+const FUNCTION_PREFIXES = ["/functions/v1/gateway", "/gateway"];
 
 // Headers que nunca devem ir pro cliente de volta (vazariam detalhes internos
 // do Supabase/Kong) nem precisam ser repassados pro Kong na ida.
@@ -45,14 +47,15 @@ Deno.serve(async (req) => {
   }
 
   const incomingUrl = new URL(req.url);
-  if (!incomingUrl.pathname.startsWith(FUNCTION_PREFIX)) {
+  const prefix = FUNCTION_PREFIXES.find((p) => incomingUrl.pathname.startsWith(p));
+  if (!prefix) {
     return new Response(JSON.stringify({ error: "rota inválida" }), {
       status: 404,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  const forwardedPath = incomingUrl.pathname.slice(FUNCTION_PREFIX.length) || "/";
+  const forwardedPath = incomingUrl.pathname.slice(prefix.length) || "/";
   const targetUrl = new URL(forwardedPath + incomingUrl.search, KONG_INTERNAL_URL);
 
   const forwardHeaders = new Headers();

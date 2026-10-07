@@ -24,6 +24,15 @@ interface IncomingPayload {
   items: IncomingItem[];
 }
 
+const MAX_ITEMS = 100;
+const MAX_QUANTITY = 999;
+const MAX_TEXT = 500;
+
+function isShortText(value: unknown, optional = false): boolean {
+  if (value === undefined || value === null) return optional;
+  return typeof value === "string" && value.length <= MAX_TEXT;
+}
+
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
@@ -45,10 +54,27 @@ Deno.serve(async (req) => {
   ) {
     return jsonResponse({ error: "campos obrigatórios ausentes" }, 400);
   }
+  // Endpoint sem login: limita tamanho do pedido e dos textos pra ninguém
+  // gravar quantidade fracionária/gigante nem encher o banco.
+  if (payload.items.length > MAX_ITEMS) {
+    return jsonResponse({ error: `máximo de ${MAX_ITEMS} itens por pedido` }, 400);
+  }
   for (const item of payload.items) {
-    if (!item.recipe_id || !Number.isFinite(item.quantity) || item.quantity <= 0) {
+    if (
+      !item.recipe_id || !Number.isInteger(item.quantity) || item.quantity <= 0 ||
+      item.quantity > MAX_QUANTITY || !isShortText(item.notes, true)
+    ) {
       return jsonResponse({ error: "item inválido no pedido" }, 400);
     }
+  }
+  if (
+    !["delivery", "table", "pickup"].includes(payload.order_type) ||
+    !isShortText(payload.restaurant_slug) || !isShortText(payload.customer_name) ||
+    !isShortText(payload.customer_phone) || !isShortText(payload.customer_address, true) ||
+    !isShortText(payload.table_number, true) || !isShortText(payload.payment_method, true) ||
+    !isShortText(payload.notes, true)
+  ) {
+    return jsonResponse({ error: "campos inválidos no pedido" }, 400);
   }
 
   const admin = getAdminClient();

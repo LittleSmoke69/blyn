@@ -45,6 +45,22 @@ Deno.serve(async (req) => {
 
   const admin = getAdminClient();
 
+  // Membro de equipe com team.manage só pode dar permissões que ele mesmo
+  // tem — senão criava um membro (ou se editava) com financial.*, etc. O dono
+  // (ownerId === callerId) continua podendo dar qualquer uma.
+  if (payload.permissions && ownerId !== callerId) {
+    const { data: callerMember } = await admin
+      .from("team_members")
+      .select("permissions")
+      .eq("user_id", callerId)
+      .maybeSingle();
+    const callerPermissions = new Set<string>(callerMember?.permissions ?? []);
+    const notHeld = payload.permissions.filter((p) => !callerPermissions.has(p));
+    if (notHeld.length > 0) {
+      return jsonResponse({ error: `sem permissão para conceder: ${notHeld.join(", ")}` }, 403);
+    }
+  }
+
   if (payload.action === "create") {
     if (!payload.name || !payload.email || !payload.password) {
       return jsonResponse({ error: "name, email e password são obrigatórios" }, 400);
