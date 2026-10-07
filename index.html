@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blyn — projeto</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --green: #32C489; --green-2: #178F5F; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Barlow", system-ui, sans-serif;
+    background: #f4f6f5;
+    color: #1a2e28;
+    padding: 48px 24px;
+  }
+  main { max-width: 900px; margin: 0 auto; }
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+  header img { height: 40px; width: auto; }
+  h1 { font-family: "Archivo", sans-serif; font-weight: 800; font-size: 1.4rem; margin: 0 0 32px; }
+  h2 { font-family: "Archivo", sans-serif; font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: .04em; color: #5b6b65; margin: 0 0 14px; }
+  section { margin-bottom: 36px; }
+  a.card, a.landing-card {
+    display: block;
+    background: #fff;
+    border: 1px solid #e3e9e6;
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: #1a2e28;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: border-color .15s, transform .15s;
+  }
+  a.card:hover, a.landing-card:hover { border-color: var(--green); transform: translateY(-2px); }
+  a.landing-card {
+    background: linear-gradient(135deg, var(--green), var(--green-2));
+    color: #fff;
+    font-size: 1.1rem;
+    padding: 24px 28px;
+    margin-bottom: 36px;
+  }
+  a.card span.tag { display: block; font-weight: 400; font-size: 0.78rem; color: #7a8a84; margin-top: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="landing/assets/logo-blyn-preta.png" alt="Blyn"></header>
+  <h1>Projeto Blyn — landing + app clonado do FoodFlow</h1>
+
+  <a class="landing-card" href="landing/index.html">🚀 Ver a landing page →</a>
+
+  <section>
+    <h2>App (clone do dashboard, com a marca Blyn aplicada)</h2>
+    <div class="grid" id="grid"></div>
+  </section>
+</main>
+<script>
+const PAGES = [
+  ["dashboard", "Dashboard"], ["pdv", "PDV"], ["tables", "Mesas"],
+  ["sales-history", "Vendas"], ["ingredients", "Ingredientes"], ["stock", "Estoque"],
+  ["menu", "Cardápio"], ["recipes", "Fichas Técnicas"], ["financial", "Financeiro"],
+  ["profit-analysis", "Análise de Lucro"], ["dre", "DRE"], ["reports", "Relatórios PDF"],
+  ["digital-menu", "Cardápio Digital"], ["online-orders", "Pedidos Online"],
+  ["settings", "Configurações"], ["team", "Equipe"],
+];
+document.getElementById("grid").innerHTML = PAGES.map(
+  ([slug, label]) => `<a class="card" href="app/${slug}/index.html">${label}<span class="tag">/app/${slug}</span></a>`
+).join("");
+</script>
+</body>
+</html>

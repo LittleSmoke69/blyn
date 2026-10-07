@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050807" />
+  <title>Blyn | Ecossistema para Deliverys</title>
+  <meta name="description" content="Blyn é o ecossistema completo de gestão para deliverys: PDV, pedidos online, cardápio digital, estoque, fichas técnicas, financeiro e DRE em uma só plataforma." />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="Blyn" />
+  <meta property="og:title" content="Blyn | Ecossistema para Deliverys" />
+  <meta property="og:description" content="Gestão, vendas e tecnologia trabalhando juntas para o seu delivery lucrar mais." />
+  <link rel="icon" type="image/png" href="assets/logo-blyn-preta.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+  <!-- ============ HEADER ============ -->
+  <header class="header" id="header">
+    <div class="header__inner">
+      <a href="#topo" class="header__logo" aria-label="Blyn — início">
+        <img src="assets/logo-blyn-branca.png" alt="Blyn — Ecossistemas para deliverys" width="219" height="97" />
+      </a>
+      <nav class="header__nav" aria-label="Seções">
+        <a href="#metodo">Como funciona</a>
+        <a href="#modulos">Módulos</a>
+        <a href="#plataforma">Plataforma</a>
+        <a href="#resultados">Resultados</a>
+        <a href="#diretores">Diretores</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="header__actions">
+        <a href="#form-hero" class="btn btn--primary btn--sm header__cta"><span>Agendar demonstração</span></a>
+        <button class="burger" id="burger" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- menu fullscreen -->
+  <nav class="menu" id="menu" aria-label="Navegação principal" aria-hidden="true">
+    <div class="menu__inner">
+      <ul class="menu__list">
+        <li><a href="#metodo" data-menu-link><span>01</span>Como funciona</a></li>
+        <li><a href="#modulos" data-menu-link><span>02</span>Módulos</a></li>
+        <li><a href="#plataforma" data-menu-link><span>03</span>Plataforma</a></li>
+        <li><a href="#resultados" data-menu-link><span>04</span>Resultados</a></li>
+        <li><a href="#diretores" data-menu-link><span>05</span>Diretores</a></li>
+        <li><a href="#faq" data-menu-link><span>06</span>FAQ</a></li>
+        <li><a href="#contato" data-menu-link><span>07</span>Contato</a></li>
+      </ul>
+      <a href="#topo" class="btn btn--primary menu__cta" data-menu-link><span>Agendar demonstração</span></a>
+    </div>
+  </nav>
+
+  <main id="conteudo">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="topo">
+      <div class="hero__frame">
+        <div class="hero__glow" aria-hidden="true"></div>
+        <div class="hero__grid container">
+          <div class="hero__copy">
+            <h1 class="hero__title">
+              <span class="line"><span class="g">SOMOS O</span></span>
+              <span class="line"><span class="g">ECOSSISTEMA</span></span>
+              <span class="line"><span>DO SEU</span></span>
+              <span class="line"><span>DELIVERY</span></span>
+            </h1>
+
+            <div class="hero__kicker" data-reveal>
+              <p>MAIS CONTROLE.<br />MAIS VENDAS DIRETAS.<br />MAIS LUCRO.</p>
+            </div>
+
+            <p class="hero__lead" data-reveal>
+              PDV, pedidos online, cardápio digital, estoque, fichas técnicas, financeiro e DRE em uma só plataforma.
+              A Blyn organiza a operação do seu delivery para você vender mais e saber exatamente quanto lucra.
+            </p>
+
+            <div class="hero__ctas" data-reveal>
+              <a href="#form-hero" class="btn btn--primary magnetic"><span>Quero uma demonstração</span></a>
+              <a href="#metodo" class="btn btn--outline magnetic"><span>Conhecer a plataforma</span></a>
+            </div>
+          </div>
+
+          <div class="hero__formwrap">
+            <div class="badge badge--top float">
+              <strong data-count="16" data-prefix="">0</strong>
+              <span>módulos<br />integrados</span>
+            </div>
+
+            <form class="formcard" id="form-hero" data-whats-form novalidate>
+              <h2 class="formcard__title">Receba uma demonstração da Blyn</h2>
+              <p class="formcard__sub">Descubra quanto o seu delivery pode lucrar com a operação organizada.</p>
+              <div class="formcard__row">
+                <label class="field"><span class="sr">Nome</span><input name="nome" placeholder="Nome *" required autocomplete="name" /></label>
+                <label class="field"><span class="sr">E-mail</span><input name="email" type="email" placeholder="E-mail *" required autocomplete="email" /></label>
+              </div>
+              <label class="field"><span class="sr">WhatsApp</span><input name="whatsapp" type="tel" placeholder="WhatsApp *" required autocomplete="tel" data-phone /></label>
+              <label class="field"><span class="sr">Nome do delivery</span><input name="delivery" placeholder="Nome do delivery *" required /></label>
+              <label class="field"><span class="sr">Instagram do delivery</span><input name="instagram" placeholder="Instagram do delivery" /></label>
+              <label class="field field--select">
+                <span class="sr">Principal desafio atual</span>
+                <select name="desafio" required>
+                  <option value="" disabled selected>Principal desafio atual *</option>
+                  <option>Dependência do iFood</option>
+                  <option>Controle financeiro</option>
+                  <option>Estoque e desperdício</option>
+                  <option>CMV / fichas técnicas</option>
+                  <option>Organização dos pedidos</option>
+                  <option>Cardápio digital próprio</option>
+                </select>
+              </label>
+              <button class="btn btn--primary btn--block" type="submit"><span>Agendar demonstração</span></button>
+              <p class="formcard__safe">Seus dados estão seguros. Sem spam.</p>
+            </form>
+
+            <div class="badge badge--bottom float float--alt">
+              <strong data-count="100" data-suffix="%">0</strong>
+              <span>na nuvem</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero__chips container" data-reveal>
+          <span>PDV</span><span>Cardápio Digital</span><span>Pedidos Online</span><span>Estoque</span><span>DRE</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STATS ============ -->
+    <section class="stats" aria-label="Números da Blyn">
+      <div class="stat"><strong data-count="16">0</strong><span>Módulos integrados</span></div>
+      <div class="stat"><strong data-count="1">0</strong><span>Plataforma para<br />toda a operação</span></div>
+      <div class="stat"><strong data-count="100" data-suffix="%">0</strong><span>Na nuvem,<br />sem instalação</span></div>
+      <div class="stat"><strong data-count="24" data-suffix="/7">0</strong><span>Acesso de<br />qualquer lugar</span></div>
+      <div class="stat"><strong data-count="3">0</strong><span>Canais: delivery,<br />balcão e salão</span></div>
+    </section>
+
+    <!-- ============ MANIFESTO ============ -->
+    <section class="manifesto">
+      <div class="manifesto__box">
+        <div class="manifesto__visual" aria-hidden="true">
+          <div class="ui-float ui-float--a" data-parallax="-60">
+            <small>Receita do dia</small>
+            <b>R$ 4.872,40</b>
+            <i class="up">▲ 18,2%</i>
+          </div>
+          <div class="ui-float ui-float--b" data-parallax="40">
+            <small>CMV médio</small>
+            <b>28,4%</b>
+            <div class="mini-bars"><span style="--h:40%"></span><span style="--h:65%"></span><span style="--h:50%"></span><span style="--h:80%"></span><span style="--h:58%"></span><span style="--h:92%"></span></div>
+          </div>
+          <div class="ui-float ui-float--c" data-parallax="-25">
+            <small>Lucro líquido</small>
+            <b>R$ 21.340,90</b>
+            <svg viewBox="0 0 120 40" class="spark"><path d="M0 34 L18 28 L34 30 L52 18 L70 22 L88 10 L120 4" /></svg>
+          </div>
+        </div>
+        <div class="manifesto__copy">
+          <h2 class="h2" data-type>
+            <span class="g">NÃO EXISTE</span><br />LUCRO SEM<br />CONTROLE
+          </h2>
+          <p data-reveal>Muitos deliverys vendem todos os dias, mas ainda dependem de marketplaces, planilhas soltas e "achismo" na hora de precificar.</p>
+          <p data-reveal>A Blyn conecta pedidos, estoque, custos e financeiro para transformar cada venda em dado — e cada dado em lucro.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DESAFIOS (pin horizontal) ============ -->
+    <section class="challenges" id="desafios">
+      <div class="challenges__pin">
+        <div class="container challenges__head">
+          <div>
+            <p class="eyebrow eyebrow--dark">Os desafios</p>
+            <h2 class="h2 h2--dark" data-type>O QUE IMPEDE MUITOS<br />DELIVERYS DE<br />LUCRAR DE VERDADE</h2>
+          </div>
+          <div class="challenges__progress" aria-hidden="true"><span></span></div>
+        </div>
+        <div class="challenges__viewport">
+          <div class="challenges__track">
+            <article class="ch-card">
+              <div class="ch-card__top"><span class="ch-card__num">01</span><h3>DEPENDÊNCIA<br />EXCESSIVA DE<br />MARKETPLACE</h3></div>
+              <p class="ch-card__desc">Taxas altas, pouco controle sobre os clientes e margem cada vez menor a cada pedido.</p>
+            </article>
+            <article class="ch-card">
+              <div class="ch-card__top"><span class="ch-card__num">02</span><h3>GESTÃO EM<br />PLANILHAS<br />SOLTAS</h3></div>
+              <p class="ch-card__desc">Informações espalhadas, retrabalho e decisões tomadas sem dados confiáveis.</p>
+            </article>
+            <article class="ch-card">
+              <div class="ch-card__top"><span class="ch-card__num">03</span><h3>CMV QUE<br />NINGUÉM<br />CONHECE</h3></div>
+              <p class="ch-card__desc">Pratos sem ficha técnica, preço definido no feeling e margem que some sem explicação.</p>
+            </article>
+            <article class="ch-card">
+              <div class="ch-card__top"><span class="ch-card__num">04</span><h3>ESTOQUE<br />SEM<br />CONTROLE</h3></div>
+              <p class="ch-card__desc">Desperdício, compras no escuro e insumo faltando justamente no horário de pico.</p>
+            </article>
+            <article class="ch-card">
+              <div class="ch-card__top"><span class="ch-card__num">05</span><h3>SEM VISÃO<br />DO LUCRO<br />REAL</h3></div>
+              <p class="ch-card__desc">Fatura bem, mas não sabe quanto sobra. Sem DRE, o caixa vira uma surpresa todo mês.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MÉTODO ============ -->
+    <section class="method" id="metodo">
+      <div class="container">
+        <div class="method__head">
+          <div>
+            <p class="eyebrow">Como funciona</p>
+            <h2 class="h2" data-type>TRANSFORMAR<br /><span class="g">OPERAÇÃO</span><br />EM LUCRO</h2>
+          </div>
+          <p class="method__lead" data-reveal>Quatro etapas que organizam gestão, vendas e tecnologia para o seu delivery crescer com previsibilidade.</p>
+        </div>
+
+        <div class="method__grid">
+          <article class="m-card">
+            <div class="m-card__visual v-scan" aria-hidden="true">
+              <div class="v-grid"></div>
+              <div class="v-ring"><span></span></div>
+              <div class="v-scanline"></div>
+            </div>
+            <span class="m-card__num">01</span>
+            <h3>IMPLANTAÇÃO</h3>
+            <p>Raio-X da sua operação e configuração da Blyn de acordo com o seu delivery.</p>
+          </article>
+          <article class="m-card">
+            <div class="m-card__visual v-route" aria-hidden="true">
+              <svg viewBox="0 0 260 150"><path class="route" d="M30 120 C 70 60, 100 70, 120 90 S 170 40, 200 50 S 230 100, 235 110" /><circle cx="30" cy="120" r="9"/><circle cx="120" cy="90" r="9"/><circle cx="200" cy="50" r="9"/><circle cx="235" cy="110" r="9"/></svg>
+            </div>
+            <span class="m-card__num">02</span>
+            <h3>CONFIGURAÇÃO</h3>
+            <p>Cardápio, insumos, fichas técnicas e custos cadastrados para precificar com segurança.</p>
+          </article>
+          <article class="m-card">
+            <div class="m-card__visual v-bars" aria-hidden="true">
+              <div class="bars"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            </div>
+            <span class="m-card__num">03</span>
+            <h3>OPERAÇÃO</h3>
+            <p>PDV, mesas, pedidos online e cardápio digital rodando integrados no dia a dia.</p>
+          </article>
+          <article class="m-card">
+            <div class="m-card__visual v-trend" aria-hidden="true">
+              <div class="bars bars--trend"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <i class="v-dot"></i>
+            </div>
+            <span class="m-card__num">04</span>
+            <h3>GESTÃO</h3>
+            <p>DRE, análise de lucro e relatórios para decidir com números, não com achismo.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CICLO ============ -->
+    <section class="cycle">
+      <div class="cycle__pin">
+        <div class="cycle__stage">
+          <div class="cycle__ring" id="cycleRing">
+            <svg class="cycle__arrows" viewBox="0 0 600 600" aria-hidden="true">
+              <g transform="rotate(0 300 300)"><g class="arrow"><path d="M401 50 A 270 270 0 0 1 550 199" /><path d="M553.6 183.4 L550 199 L536.6 190.3" /></g></g>
+              <g transform="rotate(90 300 300)"><g class="arrow"><path d="M401 50 A 270 270 0 0 1 550 199" /><path d="M553.6 183.4 L550 199 L536.6 190.3" /></g></g>
+              <g transform="rotate(180 300 300)"><g class="arrow"><path d="M401 50 A 270 270 0 0 1 550 199" /><path d="M553.6 183.4 L550 199 L536.6 190.3" /></g></g>
+              <g transform="rotate(270 300 300)"><g class="arrow"><path d="M401 50 A 270 270 0 0 1 550 199" /><path d="M553.6 183.4 L550 199 L536.6 190.3" /></g></g>
+            </svg>
+            <div class="node" style="--a:-90deg"><div class="node__inner">
+              <div class="node__label" data-label="PEDIDO" aria-hidden="true"></div>
+              <div class="node__ball"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg></div>
+              <b>Pedido</b>
+            </div></div>
+            <div class="node" style="--a:0deg"><div class="node__inner">
+              <div class="node__label" data-label="ESTOQUE" aria-hidden="true"></div>
+              <div class="node__ball"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v10l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v10"/></svg></div>
+              <b>Estoque</b>
+            </div></div>
+            <div class="node" style="--a:90deg"><div class="node__inner">
+              <div class="node__label" data-label="FINANCEIRO" aria-hidden="true"></div>
+              <div class="node__ball"><svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <b>Financeiro</b>
+            </div></div>
+            <div class="node" style="--a:180deg"><div class="node__inner">
+              <div class="node__label" data-label="LUCRO" aria-hidden="true"></div>
+              <div class="node__ball"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+              <b>Lucro</b>
+            </div></div>
+          </div>
+
+          <div class="cycle__center">
+            <p class="eyebrow eyebrow--center">O que fazemos</p>
+            <h2 class="h2 h2--center">GESTÃO.<br /><span class="g">VENDAS.</span><br />TECNOLOGIA.</h2>
+            <p class="cycle__sub">TUDO TRABALHANDO CONJUNTAMENTE</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MÓDULOS ============ -->
+    <section class="modules" id="modulos">
+      <div class="container">
+        <p class="eyebrow">Módulos</p>
+        <h2 class="h2" data-type>COMO A BLYN AJUDA SEU<br />DELIVERY A <span class="g">LUCRAR MAIS</span></h2>
+
+        <div class="modules__grid">
+          <article class="mod">
+            <div class="mod__art" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11.5l2-8H6"/></svg></div>
+            <span class="mod__icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11.5l2-8H6"/></svg></span>
+            <h3>PDV &amp; FRENTE DE CAIXA</h3>
+            <p>Vendas rápidas no balcão, delivery e retirada, com fechamento de caixa sem dor de cabeça.</p>
+          </article>
+          <article class="mod">
+            <div class="mod__art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v10l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v10"/></svg></div>
+            <span class="mod__icon"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v10l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v10"/></svg></span>
+            <h3>PEDIDOS ONLINE</h3>
+            <p>Receba e acompanhe pedidos em tempo real, do recebimento à entrega, em um só painel.</p>
+          </article>
+          <article class="mod">
+            <div class="mod__art" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2M20 14v2"/></svg></div>
+            <span class="mod__icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2M20 14v2"/></svg></span>
+            <h3>CARDÁPIO DIGITAL</h3>
+            <p>Seu cardápio próprio com QR Code para vender direto ao cliente, sem intermediários.</p>
+          </article>
+          <article class="mod">
+            <div class="mod__art" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+            <span class="mod__icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            <h3>GESTÃO DE MESAS</h3>
+            <p>Comandas e mesas organizadas para quem também atende no salão.</p>
+          </article>
+          <article class="mod">
+            <div class="mod__art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M2 3h20v4H2zM9 11h6"/></svg></div>
+            <span class="mod__icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M2 3h20v4H2zM9 11h6"/></svg></span>
+            <h3>ESTOQUE &amp; INGREDIENTES</h3>
+            <p>Baixa automática por venda, alertas de reposição e menos desperdício na cozinha.</p>
+          </article>
+          <article class="mod">
+            <div class="mod__art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 2H6v20h12V6z"/><path d="M14 2v4h4M9 12h6M9 16h6M9 8h2"/></svg></div>
+            <span class="mod__icon"><svg viewBox="0 0 24 24"><path d="M14 2H6v20h12V6z"/><path d="M14 2v4h4M9 12h6M9 16h6M9 8h2"/></svg></span>
+            <h3>FICHAS TÉCNICAS &amp; CMV</h3>
+            <p>Custo exato de cada prato para precificar com margem e parar de perder dinheiro.</p>
+          </article>
+          <article class="mod">
+            <div class="mod__art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <span class="mod__icon"><svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+            <h3>FINANCEIRO</h3>
+            <p>Contas a pagar e receber, fluxo de caixa e despesas sob controle em tempo real.</p>
+          </article>
+          <article class="mod">
+            <div class="mod__art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+            <span class="mod__icon"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></span>
+            <h3>DRE &amp; ANÁLISE DE LUCRO</h3>
+            <p>Saiba quanto sobra de verdade e quais pratos puxam — ou derrubam — o seu lucro.</p>
+          </article>
+          <article class="mod">
+            <div class="mod__art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 21V10M9 21V4M15 21v-7M21 21V8"/></svg></div>
+            <span class="mod__icon"><svg viewBox="0 0 24 24"><path d="M3 21V10M9 21V4M15 21v-7M21 21V8"/></svg></span>
+            <h3>RELATÓRIOS &amp; EQUIPE</h3>
+            <p>Relatórios em PDF, histórico de vendas e controle de acesso para cada pessoa do time.</p>
+          </article>
+        </div>
+
+        <div class="center"><a href="#topo" class="btn btn--primary magnetic"><span>Quero uma demonstração</span></a></div>
+      </div>
+    </section>
+
+    <!-- ============ PLATAFORMA ============ -->
+    <section class="platform" id="plataforma">
+      <div class="container">
+        <p class="eyebrow eyebrow--dark eyebrow--center">A plataforma</p>
+        <h2 class="h2 h2--dark h2--center" data-type>TUDO DO SEU DELIVERY<br />EM UMA SÓ TELA</h2>
+
+        <div class="mock-wrap">
+          <div class="mock" id="mock">
+            <aside class="mock__side">
+              <img src="assets/logo-blyn-branca.png" alt="" />
+              <ul>
+                <li class="on">Dashboard</li><li>PDV</li><li>Mesas</li><li>Vendas</li><li>Estoque</li><li>Cardápio</li><li>Fichas Técnicas</li><li>Financeiro</li><li>DRE</li><li>Pedidos Online</li>
+              </ul>
+            </aside>
+            <div class="mock__main">
+              <div class="mock__top"><b>Dashboard</b><span class="pill">Hoje</span></div>
+              <div class="mock__kpis">
+                <div><small>Receita total</small><b data-count="48720" data-prefix="R$ " data-money>R$ 0</b><i class="up">▲ 12,4%</i></div>
+                <div><small>Despesas</small><b data-count="19380" data-prefix="R$ " data-money>R$ 0</b><i class="dn">▼ 3,1%</i></div>
+                <div><small>Lucro líquido</small><b data-count="29340" data-prefix="R$ " data-money>R$ 0</b><i class="up">Saldo positivo</i></div>
+                <div><small>Ticket médio</small><b data-count="58" data-prefix="R$ " data-money>R$ 0</b><i>Por pedido</i></div>
+              </div>
+              <div class="mock__charts">
+                <div class="mock__chart">
+                  <small>Receitas vs Despesas · últimos 7 dias</small>
+                  <div class="cbars">
+                    <div><span style="--r:62%;--d:38%"></span></div>
+                    <div><span style="--r:70%;--d:42%"></span></div>
+                    <div><span style="--r:55%;--d:35%"></span></div>
+                    <div><span style="--r:80%;--d:44%"></span></div>
+                    <div><span style="--r:76%;--d:40%"></span></div>
+                    <div><span style="--r:92%;--d:47%"></span></div>
+                    <div><span style="--r:100%;--d:50%"></span></div>
+                  </div>
+                </div>
+                <div class="mock__rank">
+                  <small>Pratos mais vendidos</small>
+                  <ol>
+                    <li><span>Smash Burger Duplo</span><i style="--w:100%"></i></li>
+                    <li><span>Combo Família</span><i style="--w:78%"></i></li>
+                    <li><span>Batata Rústica</span><i style="--w:61%"></i></li>
+                    <li><span>Milkshake Ninho</span><i style="--w:44%"></i></li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee__row">
+          <div class="marquee__track">
+            <span>PDV</span><span>Pedidos Online</span><span>Cardápio Digital</span><span>Mesas</span><span>Estoque</span><span>Ingredientes</span><span>Fichas Técnicas</span><span>Financeiro</span>
+            <span>PDV</span><span>Pedidos Online</span><span>Cardápio Digital</span><span>Mesas</span><span>Estoque</span><span>Ingredientes</span><span>Fichas Técnicas</span><span>Financeiro</span>
+          </div>
+        </div>
+        <div class="marquee__row marquee__row--rev">
+          <div class="marquee__track">
+            <span>DRE</span><span>Análise de Lucro</span><span>Relatórios PDF</span><span>Histórico de Vendas</span><span>Equipe</span><span>Configurações</span><span>Dashboard</span><span>CMV</span>
+            <span>DRE</span><span>Análise de Lucro</span><span>Relatórios PDF</span><span>Histórico de Vendas</span><span>Equipe</span><span>Configurações</span><span>Dashboard</span><span>CMV</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CLIENTES ============ -->
+    <section class="clients" id="clientes">
+      <div class="container">
+        <p class="eyebrow eyebrow--dark eyebrow--center">Alguns de nossos clientes</p>
+        <h2 class="h2 h2--dark h2--center" data-type>DELIVERYS QUE<br />CONFIAM NA BLYN</h2>
+      </div>
+      <div class="logos">
+        <ul class="logos__track" aria-label="Clientes da Blyn">
+            <li class="logo-tile"><img src="assets/clientes/angus-burger.jpg" alt="Angus Burger" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile"><img src="assets/clientes/burguers-lab.jpg" alt="Burguer's Lab" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile"><img src="assets/clientes/ta-massa-burguers.jpg" alt="Tá Massa Burguer's" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile"><img src="assets/clientes/il-padrino.jpg" alt="Il Padrino Cucina Italiana" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile"><img src="assets/clientes/frutteto.jpg" alt="Frutteto Cozinha Artesanal" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile"><img src="assets/clientes/mineirinha-pizzaria.jpg" alt="Mineirinha Pizzaria" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile"><img src="assets/clientes/rancho-bufalo.jpg" alt="Rancho Búfalo" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile" aria-hidden="true"><img src="assets/clientes/angus-burger.jpg" alt="" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile" aria-hidden="true"><img src="assets/clientes/burguers-lab.jpg" alt="" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile" aria-hidden="true"><img src="assets/clientes/ta-massa-burguers.jpg" alt="" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile" aria-hidden="true"><img src="assets/clientes/il-padrino.jpg" alt="" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile" aria-hidden="true"><img src="assets/clientes/frutteto.jpg" alt="" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile" aria-hidden="true"><img src="assets/clientes/mineirinha-pizzaria.jpg" alt="" width="150" height="150" loading="lazy" /></li>
+            <li class="logo-tile" aria-hidden="true"><img src="assets/clientes/rancho-bufalo.jpg" alt="" width="150" height="150" loading="lazy" /></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ RESULTADOS ============ -->
+    <section class="results" id="resultados">
+      <div class="container">
+        <div class="results__head">
+          <div>
+            <p class="eyebrow">Nossos resultados</p>
+            <h2 class="h2" data-type>RESULTADOS<br />QUE VIRAM<br /><span class="g">FATURAMENTO</span></h2>
+          </div>
+          <p class="results__lead" data-reveal>Campanhas de Meta Ads levando o cliente direto para o cardápio próprio do delivery — sem comissão de marketplace no meio do caminho.</p>
+        </div>
+
+        <div class="results__stats">
+          <div class="r-stat"><strong data-count="63" data-prefix="+R$ " data-suffix=" mil">0</strong><span>Faturados nos cases abaixo</span></div>
+          <div class="r-stat"><strong data-count="777" data-prefix="+">0</strong><span>Compras feitas no site</span></div>
+          <div class="r-stat"><strong data-count="20.99" data-decimals="2" data-suffix="x">0</strong><span>Retorno sobre o investimento (ROAS)</span></div>
+        </div>
+
+        <div class="cases">
+          <article class="case">
+            <div class="case__top">
+              <span class="case__tag">Case 01</span>
+              <span class="case__roas"><b>20,99x</b> ROAS</span>
+            </div>
+            <div class="case__bars">
+              <div class="case__bar"><span class="case__label">Investido</span><div class="case__track"><i class="case__fill case__fill--in" style="--w:4.8%"></i></div><b>R$ 325,91</b></div>
+              <div class="case__bar"><span class="case__label">Faturado</span><div class="case__track"><i class="case__fill" style="--w:100%"></i></div><b class="g">R$ 6.840,30</b></div>
+            </div>
+            <ul class="case__meta"><li><b>101</b> compras no site</li><li><b>R$ 2,81</b> menor custo por compra</li></ul>
+            <button class="case__proof" type="button" data-lightbox="assets/resultados/case-1.jpg" aria-label="Ver print do Case 01 em tela cheia">
+              <img src="assets/resultados/case-1.jpg" alt="Print do Gerenciador de Anúncios: R$ 325,91 investidos e R$ 6.840,30 faturados" loading="lazy" />
+              <span>Ver print real</span>
+            </button>
+          </article>
+          <article class="case">
+            <div class="case__top">
+              <span class="case__tag">Case 02</span>
+              <span class="case__roas"><b>11,90x</b> ROAS</span>
+            </div>
+            <div class="case__bars">
+              <div class="case__bar"><span class="case__label">Investido</span><div class="case__track"><i class="case__fill case__fill--in" style="--w:8.4%"></i></div><b>R$ 4.746,94</b></div>
+              <div class="case__bar"><span class="case__label">Faturado</span><div class="case__track"><i class="case__fill" style="--w:100%"></i></div><b class="g">R$ 56.476,30</b></div>
+            </div>
+            <ul class="case__meta"><li><b>676</b> compras no site</li><li><b>R$ 5,01</b> menor custo por compra</li></ul>
+            <button class="case__proof" type="button" data-lightbox="assets/resultados/case-2.jpg" aria-label="Ver print do Case 02 em tela cheia">
+              <img src="assets/resultados/case-2.jpg" alt="Print do Gerenciador de Anúncios: R$ 4.746,94 investidos e R$ 56.476,30 faturados" loading="lazy" />
+              <span>Ver print real</span>
+            </button>
+          </article>
+        </div>
+        <p class="results__note">Prints reais do Gerenciador de Anúncios da Meta. Resultados variam de acordo com cada operação.</p>
+        <div class="center"><a href="#topo" class="btn btn--primary magnetic"><span>Quero resultados assim</span></a></div>
+      </div>
+    </section>
+
+    <!-- ============ DIRETORES ============ -->
+    <section class="team" id="diretores">
+      <div class="container">
+        <p class="eyebrow eyebrow--center">Nossos diretores</p>
+        <h2 class="h2 h2--center" data-type>QUEM FAZ A BLYN<br /><span class="g">ACONTECER</span></h2>
+
+        <div class="team__grid">
+          <article class="person">
+            <div class="person__photo"><img src="assets/ramon.jpg" alt="Ramon, CEO e Sócio Fundador da Blyn" loading="lazy" /></div>
+            <div class="person__info">
+              <h3>RAMON</h3>
+              <p class="person__role">CEO &amp; Sócio Fundador</p>
+              <p>Lidera a visão estratégica e o crescimento sustentável da Blyn.</p>
+            </div>
+          </article>
+          <article class="person">
+            <div class="person__photo"><img src="assets/pedro.jpg" alt="Pedro, CEO e Sócio Fundador da Blyn" loading="lazy" /></div>
+            <div class="person__info">
+              <h3>PEDRO</h3>
+              <p class="person__role">CEO &amp; Sócio Fundador</p>
+              <p>Conduz parcerias, mercado e a expansão da Blyn junto aos deliverys.</p>
+            </div>
+          </article>
+          <article class="person">
+            <div class="person__photo"><img src="assets/carlos.jpg" alt="Carlos, CTO e Diretor de Tecnologia da Blyn" loading="lazy" /></div>
+            <div class="person__info">
+              <h3>CARLOS</h3>
+              <p class="person__role">CTO · Diretor de Tecnologia</p>
+              <p>Comanda a engenharia e a evolução de cada módulo da plataforma.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="cta">
+      <div class="cta__box">
+        <div class="cta__bg" aria-hidden="true"></div>
+        <h2 class="h2 h2--center" data-type>SEU DELIVERY<br />PODE SER MAIS ORGANIZADO,<br />MAIS RÁPIDO E<br /><span class="g">MAIS LUCRATIVO.</span></h2>
+        <p data-reveal>Agende uma demonstração e veja na prática como a Blyn organiza a sua operação de ponta a ponta.</p>
+        <div data-reveal><a href="#topo" class="btn btn--primary magnetic"><span>Quero uma demonstração</span></a></div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="faq" id="faq">
+      <div class="container faq__grid">
+        <div class="faq__head">
+          <p class="eyebrow eyebrow--dark">FAQ</p>
+          <h2 class="h2 h2--dark" data-type>PERGUNTAS<br /><span class="g2">FREQUENTES</span></h2>
+          <p data-reveal>Tire suas dúvidas sobre como a Blyn funciona no dia a dia do seu delivery.</p>
+        </div>
+        <div class="faq__list">
+          <details class="qa">
+            <summary>A Blyn atende deliverys pequenos?<i></i></summary>
+            <div class="qa__body"><p>Sim. A Blyn foi pensada para operações de todos os tamanhos — do delivery que está começando à operação com várias frentes de venda.</p></div>
+          </details>
+          <details class="qa">
+            <summary>Preciso instalar algum programa?<i></i></summary>
+            <div class="qa__body"><p>Não. A Blyn roda 100% na nuvem: basta acessar pelo navegador no computador, tablet ou celular.</p></div>
+          </details>
+          <details class="qa">
+            <summary>Funciona para delivery e salão?<i></i></summary>
+            <div class="qa__body"><p>Sim. Você controla delivery, retirada, balcão e mesas no mesmo sistema, com tudo integrado ao estoque e ao financeiro.</p></div>
+          </details>
+          <details class="qa">
+            <summary>Como funciona a implantação?<i></i></summary>
+            <div class="qa__body"><p>Nosso time faz um diagnóstico da sua operação e ajuda a configurar cardápio, insumos e fichas técnicas para você começar a usar rápido.</p></div>
+          </details>
+          <details class="qa">
+            <summary>Como acompanho os resultados?<i></i></summary>
+            <div class="qa__body"><p>Pelo dashboard, DRE, análise de lucro e relatórios em PDF — tudo atualizado automaticamente a cada venda.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer" id="contato">
+    <div class="footer__divider" aria-hidden="true"></div>
+    <div class="container footer__grid">
+      <div class="footer__brand">
+        <img src="assets/logo-blyn-branca.png" alt="Blyn — Ecossistemas para deliverys" width="219" height="97" />
+        <p>Gestão, vendas e tecnologia para deliverys que querem crescer com previsibilidade.</p>
+        <ul class="footer__contacts">
+          <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><a href="#" data-whats-link data-cfg="phoneLabel">(00) 00000-0000</a></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg></span><a href="#" data-cfg="email">contato@blyn.com.br</a></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5"/></svg></span><a href="#" target="_blank" rel="noopener" data-cfg="instagram">@blyn</a></li>
+        </ul>
+      </div>
+      <nav class="footer__nav" aria-label="Rodapé">
+        <h4>Menu</h4>
+        <a href="#metodo">Como funciona</a>
+        <a href="#modulos">Módulos</a>
+        <a href="#plataforma">Plataforma</a>
+        <a href="#resultados">Resultados</a>
+        <a href="#diretores">Diretores</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <form class="footer__form" data-whats-form novalidate>
+        <h4>Fale com a gente</h4>
+        <label class="field"><span class="sr">Nome</span><input name="nome" placeholder="Nome *" required /></label>
+        <label class="field"><span class="sr">E-mail</span><input name="email" type="email" placeholder="E-mail *" required /></label>
+        <label class="field"><span class="sr">Mensagem</span><textarea name="mensagem" rows="3" placeholder="Conte um pouco sobre seu delivery..."></textarea></label>
+        <button class="btn btn--primary btn--block" type="submit"><span>Enviar mensagem</span></button>
+      </form>
+    </div>
+    <div class="container footer__bottom">
+      <span>Blyn <span id="year"></span>. Todos os direitos reservados.</span>
+      <a href="#">Política de privacidade</a>
+    </div>
+  </footer>
+
+  <!-- WhatsApp flutuante -->
+  <a href="#" class="whats" data-whats-link aria-label="Falar no WhatsApp">
+    <span class="whats__ic"><svg viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1s-.5-.1-.7.1-.8 1-1 1.2-.4.2-.7.1a8.2 8.2 0 0 1-4-3.5c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 0 0-.8.4 3.5 3.5 0 0 0-1.1 2.6 6 6 0 0 0 1.3 3.2 13.8 13.8 0 0 0 5.3 4.7c2 .8 2.7.9 3.7.7a3.1 3.1 0 0 0 2-1.4 2.5 2.5 0 0 0 .2-1.4c-.1-.1-.3-.2-.6-.3zM12 21.8a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4A9.8 9.8 0 1 1 12 21.8zM12 0a12 12 0 0 0-10.3 18L0 24l6.2-1.6A12 12 0 1 0 12 0z"/></svg></span>
+    <span class="whats__txt">Como posso te ajudar?</span>
+  </a>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Print do resultado" hidden>
+    <button class="lightbox__close" type="button" aria-label="Fechar">&times;</button>
+    <img alt="" />
+  </div>
+
+  <button class="totop" id="totop" aria-label="Voltar ao topo"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

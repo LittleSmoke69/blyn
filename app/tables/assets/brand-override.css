@@ -1,0 +1,91 @@
+/* Override de marca "Blyn" — aplicado por cima do bundle original do FoodFlow.
+   Fonte da verdade: blyn/landing/styles.css (mesmas cores e fontes da landing real). */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Barlow:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-body: "Barlow", system-ui, -apple-system, sans-serif;
+  --primary: 156 59% 48%;
+  --ring: 156 59% 48%;
+  --accent: 156 72% 33%;
+  --success: 156 59% 48%;
+  --warning: 156 72% 33%;
+  --chart-1: 156 59% 48%;
+  --chart-3: 156 72% 33%;
+  --gradient-primary: linear-gradient(135deg, #32C489, #178F5F);
+  --gradient-accent: linear-gradient(135deg, #178F5F, #0f6b45);
+  --shadow-glow: 0 0 20px rgb(50 196 137 / .25);
+  --shadow-glow-accent: 0 0 20px rgb(23 143 95 / .2);
+
+  /* sidebar branca, como na imagem de referência — os verdes de marca entram
+     como acento (item ativo, chip do ícone), não como fundo */
+  --sidebar-background: 0 0% 100%;
+  --gradient-sidebar: linear-gradient(180deg, #ffffff, #ffffff);
+  --sidebar-foreground: 220 25% 15%;
+  --sidebar-primary: 220 20% 13%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 15% 95%;
+  --sidebar-accent-foreground: 220 25% 15%;
+  --sidebar-border: 220 15% 90%;
+  --sidebar-ring: 156 59% 48%;
+}
+
+.gradient-sidebar { background: #ffffff !important; }
+
+/* títulos usam a fonte de destaque da marca (Archivo), igual à landing */
+h1, h2, h3 {
+  font-family: "Archivo", "Arial Black", system-ui, sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -.02em;
+}
+
+/* item ativo: pill escuro + chip verde atrás do ícone (na referência o chip é
+   laranja — aqui entra o verde de marca no lugar) */
+.bg-sidebar-primary svg {
+  background-color: #32C489;
+  color: #ffffff !important;
+  padding: 5px;
+  border-radius: 7px;
+  box-sizing: content-box;
+}
+
+/* trial banner + demais usos de laranja/âmbar hardcoded -> verde de marca */
+.bg-orange-100 { background-color: rgb(209 245 230) !important; }
+.bg-orange-500 { background-color: rgb(50 196 137) !important; }
+.text-orange-600 { color: rgb(23 143 95) !important; }
+
+.bg-amber-500 { background-color: rgb(50 196 137) !important; }
+.bg-amber-500\/10 { background-color: #32C4891a !important; }
+.bg-amber-500\/20 { background-color: #32C48933 !important; }
+.border-amber-500\/20 { border-color: #32C48933 !important; }
+.border-amber-500\/30 { border-color: #32C4894d !important; }
+
+.text-amber-400 { color: rgb(74 222 158) !important; }
+.text-amber-500 { color: rgb(50 196 137) !important; }
+.text-amber-600 { color: rgb(23 143 95) !important; }
+.text-amber-700 { color: rgb(15 107 69) !important; }
+
+.from-amber-500\/20 {
+  --tw-gradient-from: rgb(50 196 137 / .2) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(50 196 137 / 0) var(--tw-gradient-to-position) !important;
+}
+.to-amber-600\/20 { --tw-gradient-to: rgb(23 143 95 / .2) var(--tw-gradient-to-position) !important; }
+.hover\:from-amber-500\/30:hover {
+  --tw-gradient-from: rgb(50 196 137 / .3) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(50 196 137 / 0) var(--tw-gradient-to-position) !important;
+}
+.hover\:to-amber-600\/30:hover { --tw-gradient-to: rgb(23 143 95 / .3) var(--tw-gradient-to-position) !important; }
+
+/* faixa branca atrás do logo: o "Blyn" é verde e some em cima do verde da sidebar */
+.sidebar-logo-header {
+  background-color: #ffffff !important;
+}
+
+/* logo oficial (landing/assets/logo-blyn-preta.png) — já inclui o ícone e o
+   texto "Blyn — Ecossistemas para deliverys" */
+.brand-logo-mark {
+  height: 2.25rem !important;
+  width: auto !important;
+  object-fit: contain !important;
+  border-radius: 0 !important;
+}
+.brand-logo-text { display: none !important; }
