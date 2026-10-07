@@ -1,7 +1,7 @@
 -- recipes = fichas técnicas E itens do cardápio (não existe tabela de menu
--- separada no FoodFlow original, e replicamos isso aqui). category é um enum
+-- separada no sistema de referência, e replicamos isso aqui). category é um enum
 -- único (recipe_category) usado em TODAS as telas que filtram por categoria —
--- corrige o bug do FoodFlow onde o filtro do PDV usava uma lista hardcoded
+-- corrige o bug do sistema de referência onde o filtro do PDV usava uma lista hardcoded
 -- diferente da categoria real das receitas e nunca batia.
 
 create table recipes (

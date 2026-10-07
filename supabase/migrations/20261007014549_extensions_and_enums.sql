@@ -24,7 +24,7 @@ create type table_shape as enum ('square', 'round');
 create type table_status as enum ('available', 'occupied', 'reserved', 'cleaning');
 
 -- Enum único de forma de pagamento, reutilizado em orders/financial_records/accounts.
--- Casing normalizado (o FoodFlow original misturava "Pix"/"PIX" em telas diferentes).
+-- Casing normalizado (o sistema de referência misturava "Pix"/"PIX" em telas diferentes).
 create type payment_method as enum (
   'Dinheiro', 'Cartão de Crédito', 'Cartão de Débito', 'Pix', 'Transferência', 'Boleto'
 );

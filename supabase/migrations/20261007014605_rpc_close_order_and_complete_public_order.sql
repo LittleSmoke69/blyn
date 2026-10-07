@@ -1,5 +1,5 @@
 -- RPCs atômicas que substituem os 3 awaits sequenciais não-atômicos do
--- FoodFlow original (baixa de estoque + stock_movements + financial_records
+-- sistema de referência (baixa de estoque + stock_movements + financial_records
 -- feitos um por um no cliente). Aqui tudo roda numa função security definer
 -- só, numa transação implícita só — ou tudo aplica, ou nada aplica.
 

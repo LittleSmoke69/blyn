@@ -1,6 +1,6 @@
 -- Vendas internas (PDV + Mesas). Sem table_number redundante (só table_id,
 -- nullable — null = venda de balcão/PDV sem mesa). order_items ganha
--- recipe_name/unit_price como snapshot (o FoodFlow original só fazia isso em
+-- recipe_name/unit_price como snapshot (o sistema de referência só fazia isso em
 -- public_order_items; replicamos aqui também pra vendas internas sobreviverem
 -- a renomeação/exclusão de receita).
 --

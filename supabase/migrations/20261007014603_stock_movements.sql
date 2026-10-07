@@ -1,7 +1,7 @@
 -- Ledger de estoque: é o ÚNICO lugar que altera ingredients.current_stock
 -- (via trigger). Nenhum código, RPC ou cliente deve fazer UPDATE direto em
 -- ingredients.current_stock — isso elimina a race condition de read-modify-
--- write que o FoodFlow original tinha.
+-- write que o sistema de referência tinha.
 
 create table stock_movements (
   id uuid primary key default gen_random_uuid(),

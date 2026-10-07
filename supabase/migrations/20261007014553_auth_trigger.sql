@@ -1,6 +1,6 @@
 -- Trigger que roda no signup (insert em auth.users) e cria profile,
 -- subscription (trial de 7 dias) e restaurant_settings (com slug único) —
--- replica o fluxo real do FoodFlow, onde o cliente só faz signUp() com
+-- replica o fluxo real do sistema de referência, onde o cliente só faz signUp() com
 -- {data: {restaurant_name}} e espera essas 3 linhas existirem depois.
 
 create or replace function handle_new_user()

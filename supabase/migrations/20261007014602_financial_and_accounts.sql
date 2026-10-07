@@ -1,5 +1,5 @@
 -- financial_records: lançamentos de caixa (ledger). category_type substitui o
--- keyword-matching frágil que o DRE do FoodFlow original fazia em cima da
+-- keyword-matching frágil que o DRE do sistema de referência fazia em cima da
 -- string livre de category (ex: achar "aluguel" na string pra classificar
 -- como custo fixo) — aqui é explícito e indexável.
 
@@ -41,7 +41,7 @@ create policy financial_records_delete on financial_records for delete to authen
   using (get_owner_id(auth.uid()) = user_id and has_permission('financial.manage'));
 
 -- accounts: Contas a Pagar/Receber — conceito separado de financial_records
--- no FoodFlow original (as duas telas nunca se reconciliavam). Aqui, marcar
+-- no sistema de referência (as duas telas nunca se reconciliavam). Aqui, marcar
 -- uma conta como 'paid' gera automaticamente um lançamento em
 -- financial_records via trigger, então os dois ficam sempre consistentes.
 
