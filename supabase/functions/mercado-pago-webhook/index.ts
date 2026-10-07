@@ -1,32 +1,46 @@
-// STUB — só a rota e o contrato estão definidos nesta fase. Integração
-// completa com o Mercado Pago (verificação de assinatura, busca do pagamento
-// real na API deles, criação da preference) é trabalho futuro, fora do
-// escopo desta fase (schema + auth).
-//
-// Contrato pretendido:
-//   1. Receber a notificação IPN do Mercado Pago (query params: topic, id).
-//   2. NUNCA confiar no corpo do webhook sozinho — verificar o header
-//      x-signature contra um segredo guardado em env, e then buscar o status
-//      real do pagamento na API do Mercado Pago (GET /v1/payments/{id}).
-//   3. Se status aprovado: resolver a assinatura alvo via `external_reference`
-//      (setado na criação da preference, deve ser o user_id do dono) e setar
-//      subscriptions.status='active', plan='pro', expires_at calculado a
-//      partir de billing_cycle.
-//   4. Sempre responder 200 pro Mercado Pago (mesmo em erro de validação
-//      interna) pra evitar retentativas excessivas — logar o erro, não
-//      propagar como erro HTTP.
+// Recebe notificações do Mercado Pago e grava CADA evento em webhook_events
+// — isso é o que alimenta a tela de "Eventos" do painel admin. O
+// processamento automático (ativar assinatura sozinho) continua como stub:
+// verificar a assinatura do webhook e buscar o pagamento real na API do
+// Mercado Pago é trabalho futuro (precisa das credenciais reais, que ainda
+// não existem). Por enquanto, o evento fica logado e visível pro admin agir
+// manualmente (ex: via admin-manage-accounts, action=activate_subscription).
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { getAdminClient } from "../_shared/supabaseAdmin.ts";
 
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
-  console.log("mercado-pago-webhook: recebido, integração ainda não implementada", {
-    method: req.method,
-    url: req.url,
+  let payload: unknown = null;
+  try {
+    payload = await req.json();
+  } catch {
+    const url = new URL(req.url);
+    payload = Object.fromEntries(url.searchParams.entries());
+  }
+
+  const admin = getAdminClient();
+  const eventType =
+    (payload as Record<string, unknown>)?.type ??
+    (payload as Record<string, unknown>)?.topic ??
+    "unknown";
+
+  const { error } = await admin.from("webhook_events").insert({
+    source: "mercado_pago",
+    event_type: String(eventType),
+    payload,
+    processed: false,
+    processing_note:
+      "Recebido e logado. Verificação de assinatura + ativação automática ainda não implementadas " +
+      "(fase futura) — ativar manualmente via painel admin.",
   });
 
-  // TODO (fase futura): verificar assinatura, buscar pagamento real, ativar
-  // a assinatura correspondente via supabase admin client.
+  if (error) {
+    console.error("mercado-pago-webhook: falha ao gravar webhook_events", error);
+  }
+
+  // Sempre 200 pro Mercado Pago, mesmo se o log interno falhar — evita
+  // retentativas excessivas por um problema nosso.
   return jsonResponse({ received: true }, 200);
 });

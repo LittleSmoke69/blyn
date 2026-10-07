@@ -83,3 +83,24 @@ values (
   '11111111-1111-1111-1111-111111111111', 'expense', 'Aluguel', 'fixed',
   'Aluguel do mês', 2500.00, 'Transferência', current_date
 );
+
+-- Admin da PLATAFORMA (não confundir com o dono do restaurante acima). Não
+-- existe fluxo de auto-promoção — essa é a única forma de virar admin fora
+-- de um insert manual direto no banco em produção.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, email_change, email_change_token_new, recovery_token
+) values (
+  '00000000-0000-0000-0000-000000000000',
+  '55555555-5555-5555-5555-555555555555',
+  'authenticated', 'authenticated',
+  'admin@blyn.test',
+  crypt('Teste123', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{}',
+  now(), now(), '', '', '', ''
+);
+
+insert into admins (user_id) values ('55555555-5555-5555-5555-555555555555');

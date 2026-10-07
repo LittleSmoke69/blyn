@@ -299,6 +299,97 @@ async function main() {
   const { data: publicIngredients } = await anonClient.from("ingredients").select("*");
   assert((publicIngredients?.length ?? 0) === 0, "ingredients continua privado sem login");
 
+  console.log("\n=== 10. painel admin: fronteira de acesso ===");
+  const { data: profilesSeenByOwnerA } = await ownerA.client
+    .from("profiles")
+    .select("*")
+    .neq("user_id", ownerA.userId);
+  assert((profilesSeenByOwnerA?.length ?? 0) === 0, "owner (não-admin) não enxerga profiles de outras empresas");
+
+  // Promove um usuário a admin via insert direto (service role) — é assim
+  // que funciona de verdade, não existe endpoint pra isso.
+  const adminUser = await signUpAndLogin("Conta do Admin (sem restaurante de verdade)");
+  await admin.from("admins").insert({ user_id: adminUser.userId });
+
+  const { data: profilesSeenByAdmin } = await adminUser.client.from("profiles").select("user_id");
+  const profileIds = new Set((profilesSeenByAdmin ?? []).map((p) => p.user_id));
+  assert(
+    profileIds.has(ownerA.userId) && profileIds.has(ownerB.userId),
+    "admin enxerga profiles de TODAS as empresas"
+  );
+
+  console.log("\n=== 11. admin-manage-accounts: criar, editar, ativar assinatura ===");
+  const newAccountEmail = freshEmail("nova-empresa");
+  const createResp = await fetch(`${GATEWAY_URL}/functions/v1/admin-manage-accounts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${(await adminUser.client.auth.getSession()).data.session?.access_token}`,
+    },
+    body: JSON.stringify({
+      action: "create",
+      restaurant_name: "Nova Empresa Via Admin",
+      email: newAccountEmail,
+      password: "Verify123!",
+    }),
+  });
+  const createJson = await createResp.json();
+  assert(createResp.status === 201, `admin cria conta de empresa (${JSON.stringify(createJson)})`);
+
+  await new Promise((r) => setTimeout(r, 300));
+  const { data: newProfile } = await admin.from("profiles").select("*").eq("user_id", createJson.user_id).single();
+  assert(newProfile?.restaurant_name === "Nova Empresa Via Admin", "trigger de signup rodou pra conta criada pelo admin");
+
+  const nonAdminCreateResp = await fetch(`${GATEWAY_URL}/functions/v1/admin-manage-accounts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${(await ownerA.client.auth.getSession()).data.session?.access_token}`,
+    },
+    body: JSON.stringify({ action: "create", restaurant_name: "Hack", email: freshEmail("hack"), password: "Verify123!" }),
+  });
+  assert(nonAdminCreateResp.status === 403, "não-admin chamando admin-manage-accounts recebe 403");
+
+  const updateResp = await fetch(`${GATEWAY_URL}/functions/v1/admin-manage-accounts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${(await adminUser.client.auth.getSession()).data.session?.access_token}`,
+    },
+    body: JSON.stringify({ action: "update", user_id: createJson.user_id, restaurant_name: "Nome Editado Pelo Admin" }),
+  });
+  assert(updateResp.status === 200, "admin edita conta de empresa");
+  const { data: profileAfterUpdate } = await admin.from("profiles").select("restaurant_name").eq("user_id", createJson.user_id).single();
+  assert(profileAfterUpdate?.restaurant_name === "Nome Editado Pelo Admin", "edição do admin persistiu");
+
+  const activateResp = await fetch(`${GATEWAY_URL}/functions/v1/admin-manage-accounts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${(await adminUser.client.auth.getSession()).data.session?.access_token}`,
+    },
+    body: JSON.stringify({ action: "activate_subscription", user_id: createJson.user_id, billing_cycle: "annual" }),
+  });
+  const activateJson = await activateResp.json();
+  assert(activateResp.status === 200 && activateJson.status === "active" && activateJson.billing_cycle === "annual", "admin ativa assinatura anual");
+  const daysUntilExpiry = (new Date(activateJson.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+  assert(daysUntilExpiry > 360 && daysUntilExpiry < 370, "expires_at calculado para ~1 ano a partir de hoje");
+
+  console.log("\n=== 12. webhook de eventos ===");
+  const webhookResp = await fetch(`${GATEWAY_URL}/functions/v1/mercado-pago-webhook`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "payment", data: { id: "123456789" } }),
+  });
+  assert(webhookResp.status === 200, "webhook do Mercado Pago responde 200");
+
+  await new Promise((r) => setTimeout(r, 200));
+  const { data: eventsSeenByAdmin } = await adminUser.client.from("webhook_events").select("*").eq("source", "mercado_pago");
+  assert((eventsSeenByAdmin?.length ?? 0) > 0, "admin vê o evento de webhook logado");
+
+  const { data: eventsSeenByOwner } = await ownerA.client.from("webhook_events").select("*");
+  assert((eventsSeenByOwner?.length ?? 0) === 0, "owner (não-admin) não enxerga webhook_events");
+
   console.log(`\n=== resultado: ${passed} passaram, ${failed} falharam ===\n`);
   if (failed > 0) process.exit(1);
 }
