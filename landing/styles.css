@@ -813,3 +813,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* honeypot anti-spam dos formulários (invisível pra pessoas, visível pra bots) */
 .hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; overflow: hidden; }
+
+/* ---------- acesso à conta (/entrar) ---------- */
+.menu__cta + .menu__cta { margin-left: 10px; }
+@media (max-width: 600px) {
+  .header__login { --bh: 38px; padding: 0 16px; }
+}

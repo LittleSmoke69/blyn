@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Painel admin — Blyn</title>
+  <link rel="icon" type="image/png" href="/assets/logo-blyn-preta.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/shared/painel.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a href="/admin/"><img class="topbar__logo" src="/assets/logo-blyn-preta.png" alt="Blyn" width="68" height="30" /></a>
+      <span class="topbar__tag">Admin</span>
+      <span class="topbar__user" id="usuario"></span>
+      <button class="btn btn--ghost btn--sm" id="sair" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main class="page" id="app" hidden>
+    <div class="page__head">
+      <div>
+        <h1>Painel admin</h1>
+        <p class="page__sub">Empresas cadastradas, assinaturas e webhooks.</p>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" aria-controls="aba-empresas" id="tab-empresas" type="button">Empresas</button>
+      <button role="tab" aria-selected="false" aria-controls="aba-webhooks" id="tab-webhooks" type="button">Webhooks</button>
+    </div>
+
+    <!-- ===== Empresas ===== -->
+    <section id="aba-empresas" role="tabpanel" aria-labelledby="tab-empresas">
+      <div class="stats" id="stats"></div>
+      <div class="card">
+        <div class="card__head">
+          <h2>Empresas</h2>
+          <input class="search" id="busca" type="search" placeholder="Buscar por nome ou e-mail" aria-label="Buscar empresa" />
+          <button class="btn btn--primary btn--sm" id="nova" type="button" style="margin-left:auto">+ Nova empresa</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Empresa</th><th>Contato</th><th>Assinatura</th><th>Vence em</th><th>Cadastro</th><th><span class="sr">Ações</span></th></tr>
+            </thead>
+            <tbody id="lista"><tr><td colspan="6" class="loading">Carregando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Webhooks ===== -->
+    <section id="aba-webhooks" role="tabpanel" aria-labelledby="tab-webhooks" hidden>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card__head"><h2>URLs para o Mercado Pago</h2></div>
+        <div class="card__body" id="urls"><div class="loading">Carregando…</div></div>
+      </div>
+      <div class="card">
+        <div class="card__head">
+          <h2>Últimos eventos recebidos</h2>
+          <button class="btn btn--ghost btn--sm" id="recarregar-eventos" type="button" style="margin-left:auto">Atualizar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Recebido em</th><th>Ambiente</th><th>Tipo</th><th>Payload</th></tr></thead>
+            <tbody id="eventos"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="loading" id="carregando">Carregando…</div>
+
+  <!-- ===== Modal: nova / editar empresa ===== -->
+  <dialog id="dlg-empresa" aria-labelledby="dlg-empresa-titulo">
+    <form id="form-empresa" method="dialog" novalidate>
+      <div class="modal__head">
+        <h2 id="dlg-empresa-titulo">Nova empresa</h2>
+        <p id="dlg-empresa-sub">Cria o login do dono e o restaurante, com 7 dias de teste.</p>
+      </div>
+      <div class="modal__body">
+        <div class="alert alert--error" id="empresa-erro" role="alert" hidden></div>
+        <div class="field">
+          <label for="f-nome">Nome do restaurante</label>
+          <input id="f-nome" name="restaurant_name" required maxlength="120" />
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-email">E-mail de acesso</label>
+            <input id="f-email" name="email" type="email" required autocomplete="off" />
+          </div>
+          <div class="field" id="campo-senha">
+            <label for="f-senha">Senha inicial</label>
+            <input id="f-senha" name="password" type="text" minlength="6" autocomplete="new-password" />
+            <small>Mínimo de 6 caracteres.</small>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-telefone">Telefone</label>
+            <input id="f-telefone" name="phone" type="tel" maxlength="40" />
+          </div>
+          <div class="field">
+            <label for="f-endereco">Endereço</label>
+            <input id="f-endereco" name="address" maxlength="200" />
+          </div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-fechar>Cancelar</button>
+        <button class="btn btn--primary" type="submit" id="salvar-empresa">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== Modal: ativar assinatura ===== -->
+  <dialog id="dlg-plano" aria-labelledby="dlg-plano-titulo">
+    <form id="form-plano" method="dialog">
+      <div class="modal__head">
+        <h2 id="dlg-plano-titulo">Ativar assinatura</h2>
+        <p id="dlg-plano-sub"></p>
+      </div>
+      <div class="modal__body">
+        <div class="alert alert--error" id="plano-erro" role="alert" hidden></div>
+        <div class="choice">
+          <div>
+            <input type="radio" name="ciclo" id="ciclo-mensal" value="monthly" checked />
+            <label for="ciclo-mensal"><strong>Mensal</strong><span class="muted">vale 30 dias a partir de hoje</span></label>
+          </div>
+          <div>
+            <input type="radio" name="ciclo" id="ciclo-anual" value="annual" />
+            <label for="ciclo-anual"><strong>Anual</strong><span class="muted">vale 365 dias a partir de hoje</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-fechar>Cancelar</button>
+        <button class="btn btn--primary" type="submit" id="salvar-plano">Ativar plano</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="/shared/blyn-auth.js"></script>
+  <script>
+    const { h } = Blyn;
+    const $ = (id) => document.getElementById(id);
+
+    const STATUS = {
+      active: "Ativa", trial: "Teste", past_due: "Pagamento pendente",
+      canceled: "Cancelada", expired: "Expirada",
+    };
+    const CICLO = { monthly: "mensal", semiannual: "semestral", annual: "anual" };
+
+    const fmtData = (iso) => iso ? new Date(iso).toLocaleDateString("pt-BR") : "—";
+    const fmtDataHora = (iso) => iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—";
+
+    let empresas = [];
+    let toastTimer;
+
+    function toast(msg, erro = false) {
+      const t = $("toast");
+      t.textContent = msg;
+      t.className = "toast" + (erro ? " toast--error" : "");
+      t.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => (t.hidden = true), 4000);
+    }
+
+    // Status efetivo: trial vencido ou plano com expires_at no passado aparecem como expirados.
+    function statusEfetivo(sub) {
+      if (!sub) return "none";
+      const agora = Date.now();
+      if (sub.status === "trial" && sub.trial_end_date && new Date(sub.trial_end_date) < agora) return "expired";
+      if (sub.status === "active" && sub.expires_at && new Date(sub.expires_at) < agora) return "expired";
+      return sub.status;
+    }
+    function vencimento(sub) {
+      if (!sub) return null;
+      return sub.status === "trial" ? sub.trial_end_date : sub.expires_at;
+    }
+
+    // ---------- carregamento ----------
+    async function carregarEmpresas() {
+      const [perfis, assinaturas, ajustes] = await Promise.all([
+        Blyn.rest("profiles?select=user_id,restaurant_name,email,phone,address,created_at&order=created_at.desc"),
+        Blyn.rest("subscriptions?select=user_id,status,plan,billing_cycle,trial_end_date,expires_at"),
+        Blyn.rest("restaurant_settings?select=user_id,slug"),
+      ]);
+      const subPor = new Map(assinaturas.map((s) => [s.user_id, s]));
+      const slugPor = new Map(ajustes.map((a) => [a.user_id, a.slug]));
+      empresas = perfis.map((p) => ({ ...p, sub: subPor.get(p.user_id), slug: slugPor.get(p.user_id) }));
+      renderStats();
+      renderLista();
+    }
+
+    function renderStats() {
+      const conta = (st) => empresas.filter((e) => statusEfetivo(e.sub) === st).length;
+      const itens = [
+        ["Empresas", empresas.length],
+        ["Assinaturas ativas", conta("active")],
+        ["Em teste", conta("trial")],
+        ["Expiradas / canceladas", conta("expired") + conta("canceled")],
+      ];
+      $("stats").replaceChildren(...itens.map(([rotulo, valor]) =>
+        h("div", { class: "stat" }, h("div", { class: "stat__label" }, rotulo), h("div", { class: "stat__value" }, valor))
+      ));
+    }
+
+    function renderLista() {
+      const termo = $("busca").value.trim().toLowerCase();
+      const filtradas = empresas.filter((e) =>
+        !termo || (e.restaurant_name ?? "").toLowerCase().includes(termo) || (e.email ?? "").toLowerCase().includes(termo)
+      );
+      if (filtradas.length === 0) {
+        $("lista").replaceChildren(h("tr", {}, h("td", { colspan: 6, class: "empty" },
+          empresas.length ? "Nenhuma empresa encontrada para essa busca." : "Nenhuma empresa cadastrada ainda.")));
+        return;
+      }
+      $("lista").replaceChildren(...filtradas.map((e) => {
+        const st = statusEfetivo(e.sub);
+        const ciclo = e.sub?.status === "active" && e.sub.billing_cycle ? ` · ${CICLO[e.sub.billing_cycle] ?? e.sub.billing_cycle}` : "";
+        return h("tr", {},
+          h("td", {},
+            h("div", { class: "strong" }, e.restaurant_name || "(sem nome)"),
+            e.slug ? h("div", { class: "muted" }, e.slug) : null),
+          h("td", {},
+            h("div", {}, e.email || "—"),
+            e.phone ? h("div", { class: "muted" }, e.phone) : null),
+          h("td", {}, h("span", { class: `badge badge--${st}` }, (STATUS[st] ?? "Sem assinatura") + ciclo)),
+          h("td", { class: "num" }, fmtData(vencimento(e.sub))),
+          h("td", { class: "num" }, fmtData(e.created_at)),
+          h("td", { class: "actions" },
+            h("button", { class: "btn btn--ghost btn--sm", type: "button", onclick: () => abrirEmpresa(e) }, "Editar"),
+            h("button", { class: "btn btn--primary btn--sm", type: "button", onclick: () => abrirPlano(e) }, "Ativar plano")),
+        );
+      }));
+    }
+
+    // ---------- empresa (nova / editar) ----------
+    let editando = null;
+    function abrirEmpresa(empresa = null) {
+      editando = empresa;
+      const f = $("form-empresa");
+      f.reset();
+      $("empresa-erro").hidden = true;
+      $("dlg-empresa-titulo").textContent = empresa ? "Editar empresa" : "Nova empresa";
+      $("dlg-empresa-sub").textContent = empresa
+        ? "Altera os dados do restaurante e o e-mail de acesso do dono."
+        : "Cria o login do dono e o restaurante, com 7 dias de teste.";
+      $("campo-senha").hidden = !!empresa;
+      if (empresa) {
+        f.restaurant_name.value = empresa.restaurant_name ?? "";
+        f.email.value = empresa.email ?? "";
+        f.phone.value = empresa.phone ?? "";
+        f.address.value = empresa.address ?? "";
+      }
+      $("dlg-empresa").showModal();
+      f.restaurant_name.focus();
+    }
+
+    $("form-empresa").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = ev.target;
+      const erro = $("empresa-erro");
+      const botao = $("salvar-empresa");
+      const dados = {
+        restaurant_name: f.restaurant_name.value.trim(),
+        email: f.email.value.trim(),
+        password: f.password.value,
+        phone: f.phone.value.trim(),
+        address: f.address.value.trim(),
+      };
+      erro.hidden = true;
+      if (!dados.restaurant_name || !dados.email || (!editando && dados.password.length < 6)) {
+        erro.textContent = editando ? "Preencha nome e e-mail." : "Preencha nome, e-mail e uma senha com ao menos 6 caracteres.";
+        erro.hidden = false;
+        return;
+      }
+      botao.disabled = true;
+      try {
+        if (editando) {
+          const mudou = {};
+          if (dados.restaurant_name !== (editando.restaurant_name ?? "")) mudou.restaurant_name = dados.restaurant_name;
+          if (dados.phone !== (editando.phone ?? "")) mudou.phone = dados.phone;
+          if (dados.address !== (editando.address ?? "")) mudou.address = dados.address;
+          if (dados.email !== (editando.email ?? "")) mudou.email = dados.email;
+          if (Object.keys(mudou).length) {
+            await Blyn.fn("admin-manage-accounts", { action: "update", user_id: editando.user_id, ...mudou });
+          }
+          toast("Empresa atualizada.");
+        } else {
+          const { user_id } = await Blyn.fn("admin-manage-accounts", {
+            action: "create", restaurant_name: dados.restaurant_name, email: dados.email, password: dados.password,
+          });
+          if (dados.phone || dados.address) {
+            await Blyn.fn("admin-manage-accounts", {
+              action: "update", user_id,
+              ...(dados.phone ? { phone: dados.phone } : {}),
+              ...(dados.address ? { address: dados.address } : {}),
+            });
+          }
+          toast("Empresa criada.");
+        }
+        $("dlg-empresa").close();
+        await carregarEmpresas();
+      } catch (err) {
+        erro.textContent = err.message;
+        erro.hidden = false;
+      } finally {
+        botao.disabled = false;
+      }
+    });
+
+    // ---------- ativar plano ----------
+    let ativando = null;
+    function abrirPlano(empresa) {
+      ativando = empresa;
+      $("plano-erro").hidden = true;
+      $("dlg-plano-sub").textContent = empresa.restaurant_name || empresa.email;
+      $("form-plano").reset();
+      $("dlg-plano").showModal();
+    }
+
+    $("form-plano").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const botao = $("salvar-plano");
+      botao.disabled = true;
+      try {
+        await Blyn.fn("admin-manage-accounts", {
+          action: "activate_subscription", user_id: ativando.user_id, billing_cycle: ev.target.ciclo.value,
+        });
+        $("dlg-plano").close();
+        toast("Assinatura ativada.");
+        await carregarEmpresas();
+      } catch (err) {
+        $("plano-erro").textContent = err.message;
+        $("plano-erro").hidden = false;
+      } finally {
+        botao.disabled = false;
+      }
+    });
+
+    document.querySelectorAll("[data-fechar]").forEach((b) => b.addEventListener("click", () => b.closest("dialog").close()));
+
+    // ---------- webhooks ----------
+    let webhooksCarregados = false;
+    function linhaUrl(rotulo, url) {
+      const copiar = h("button", { class: "btn btn--ghost btn--sm", type: "button" }, "Copiar");
+      copiar.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(url); toast("URL copiada."); }
+        catch { toast("Não foi possível copiar.", true); }
+      });
+      return h("div", { class: "field" }, h("label", {}, rotulo), h("div", { class: "copy" }, h("code", {}, url), copiar));
+    }
+
+    async function carregarWebhooks() {
+      try {
+        const info = await Blyn.fn("admin-get-webhook-urls");
+        $("urls").replaceChildren(
+          linhaUrl("Produção", info.production.url),
+          linhaUrl("Teste", info.test.url),
+          h("p", { class: "muted", style: "margin:0" },
+            "Os eventos são só registrados por enquanto: a ativação automática ainda não existe. Ative o plano manualmente na aba Empresas."),
+        );
+      } catch (err) {
+        $("urls").replaceChildren(h("div", { class: "alert alert--error" }, err.message));
+      }
+      await carregarEventos();
+      webhooksCarregados = true;
+    }
+
+    async function carregarEventos() {
+      try {
+        const eventos = await Blyn.rest("webhook_events?select=received_at,environment,event_type,payload&order=received_at.desc&limit=50");
+        if (!eventos.length) {
+          $("eventos").replaceChildren(h("tr", {}, h("td", { colspan: 4, class: "empty" }, "Nenhum evento recebido ainda.")));
+          return;
+        }
+        $("eventos").replaceChildren(...eventos.map((ev) => h("tr", {},
+          h("td", { class: "num" }, fmtDataHora(ev.received_at)),
+          h("td", {}, h("span", { class: `badge ${ev.environment === "production" ? "badge--active" : "badge--trial"}` },
+            ev.environment === "production" ? "Produção" : "Teste")),
+          h("td", {}, ev.event_type),
+          h("td", {}, h("pre", { class: "payload" }, JSON.stringify(ev.payload, null, 2))),
+        )));
+      } catch (err) {
+        $("eventos").replaceChildren(h("tr", {}, h("td", { colspan: 4 }, h("div", { class: "alert alert--error" }, err.message))));
+      }
+    }
+
+    // ---------- abas ----------
+    function mostrarAba(nome) {
+      for (const aba of ["empresas", "webhooks"]) {
+        $(`tab-${aba}`).setAttribute("aria-selected", String(aba === nome));
+        $(`aba-${aba}`).hidden = aba !== nome;
+      }
+      if (nome === "webhooks" && !webhooksCarregados) carregarWebhooks();
+    }
+    $("tab-empresas").addEventListener("click", () => mostrarAba("empresas"));
+    $("tab-webhooks").addEventListener("click", () => mostrarAba("webhooks"));
+
+    $("busca").addEventListener("input", renderLista);
+    $("nova").addEventListener("click", () => abrirEmpresa());
+    $("recarregar-eventos").addEventListener("click", carregarEventos);
+    $("sair").addEventListener("click", () => Blyn.signOut());
+
+    // ---------- início: só admin da plataforma fica aqui ----------
+    (async () => {
+      const sessao = await Blyn.getSession();
+      if (!sessao) return location.replace("/entrar/");
+      if (!(await Blyn.isAdmin())) return location.replace("/conta/");
+      $("usuario").textContent = sessao.user.email;
+      $("carregando").hidden = true;
+      $("app").hidden = false;
+      try {
+        await carregarEmpresas();
+      } catch (err) {
+        $("lista").replaceChildren(h("tr", {}, h("td", { colspan: 6 }, h("div", { class: "alert alert--error" }, err.message))));
+      }
+    })();
+  </script>
+</body>
+</html>

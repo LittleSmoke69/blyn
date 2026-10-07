@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Minha conta — Blyn</title>
+  <link rel="icon" type="image/png" href="/assets/logo-blyn-preta.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/shared/painel.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a href="/conta/"><img class="topbar__logo" src="/assets/logo-blyn-preta.png" alt="Blyn" width="68" height="30" /></a>
+      <span class="topbar__user" id="usuario"></span>
+      <button class="btn btn--ghost btn--sm" id="sair" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main class="page" id="app" hidden style="max-width:760px">
+    <div class="page__head">
+      <div>
+        <h1 id="titulo">Minha conta</h1>
+        <p class="page__sub" id="subtitulo"></p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card__head"><h2>Assinatura</h2></div>
+      <div class="card__body" id="assinatura"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card__head"><h2>Dados da conta</h2></div>
+      <div class="card__body" id="dados"></div>
+    </div>
+
+    <div class="alert alert--ok" style="margin:0">
+      O painel do restaurante (PDV, pedidos, estoque, financeiro) está sendo finalizado e vai aparecer aqui.
+      Enquanto isso, fale com a equipe Blyn para qualquer ajuste na sua conta.
+    </div>
+  </main>
+
+  <div class="loading" id="carregando">Carregando…</div>
+
+  <script src="/shared/blyn-auth.js"></script>
+  <script>
+    const { h } = Blyn;
+    const $ = (id) => document.getElementById(id);
+    const fmtData = (iso) => iso ? new Date(iso).toLocaleDateString("pt-BR") : "—";
+    const STATUS = { active: "Ativa", trial: "Período de teste", past_due: "Pagamento pendente", canceled: "Cancelada", expired: "Expirada" };
+    const CICLO = { monthly: "Mensal", semiannual: "Semestral", annual: "Anual" };
+
+    function linha(rotulo, valor) {
+      return h("div", { style: "display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--line)" },
+        h("span", { class: "muted" }, rotulo), h("span", { style: "text-align:right;font-weight:600" }, valor ?? "—"));
+    }
+
+    $("sair").addEventListener("click", () => Blyn.signOut());
+
+    (async () => {
+      const sessao = await Blyn.getSession();
+      if (!sessao) return location.replace("/entrar/");
+      $("usuario").textContent = sessao.user.email;
+
+      // RLS: cada um só enxerga o próprio perfil/assinatura. Membro de equipe
+      // não tem assinatura própria (é a do dono do restaurante).
+      const uid = encodeURIComponent(sessao.user.id);
+      const [perfis, assinaturas] = await Promise.all([
+        Blyn.rest(`profiles?select=restaurant_name,email,phone,address,created_at&user_id=eq.${uid}`),
+        Blyn.rest(`subscriptions?select=status,billing_cycle,trial_end_date,expires_at&user_id=eq.${uid}`),
+      ]).catch(() => [[], []]);
+      const perfil = perfis[0];
+      const sub = assinaturas[0];
+
+      $("titulo").textContent = perfil?.restaurant_name || "Minha conta";
+      $("subtitulo").textContent = sessao.user.email;
+
+      if (sub) {
+        const agora = Date.now();
+        let status = sub.status;
+        if (status === "trial" && sub.trial_end_date && new Date(sub.trial_end_date) < agora) status = "expired";
+        if (status === "active" && sub.expires_at && new Date(sub.expires_at) < agora) status = "expired";
+        const badge = { active: "active", trial: "trial", past_due: "past_due", canceled: "canceled", expired: "expired" }[status] ?? "none";
+        $("assinatura").replaceChildren(
+          linha("Situação", h("span", { class: `badge badge--${badge}` }, STATUS[status] ?? status)),
+          sub.status === "trial"
+            ? linha("Teste termina em", fmtData(sub.trial_end_date))
+            : linha("Plano", CICLO[sub.billing_cycle] ?? "—"),
+          sub.status !== "trial" ? linha("Válida até", fmtData(sub.expires_at)) : null,
+        );
+      } else {
+        $("assinatura").replaceChildren(h("p", { class: "muted", style: "margin:0" },
+          "A assinatura desta conta é gerenciada pelo dono do restaurante."));
+      }
+
+      $("dados").replaceChildren(
+        linha("Restaurante", perfil?.restaurant_name),
+        linha("E-mail", perfil?.email ?? sessao.user.email),
+        linha("Telefone", perfil?.phone),
+        linha("Endereço", perfil?.address),
+        linha("Cliente desde", fmtData(perfil?.created_at)),
+      );
+
+      $("carregando").hidden = true;
+      $("app").hidden = false;
+    })();
+  </script>
+</body>
+</html>
