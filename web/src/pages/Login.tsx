@@ -21,7 +21,7 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <img src="/logo-blyn-preta.png" alt="Blyn" className="h-10 w-auto object-contain" />
+          <img src={`${import.meta.env.BASE_URL}logo-blyn-preta.png`} alt="Blyn" className="h-10 w-auto object-contain" />
         </div>
         <div className="bg-card border border-border rounded-2xl p-8">
           <h1 className="text-xl mb-1">Bem-vindo de volta</h1>

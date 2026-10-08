@@ -17,7 +17,7 @@ interface MenuItem {
 }
 
 function publicMenuUrl(slug: string) {
-  return `${window.location.origin}/cardapio/${slug}`;
+  return `${window.location.origin}${import.meta.env.BASE_URL}cardapio/${slug}`;
 }
 
 export function DigitalMenu() {

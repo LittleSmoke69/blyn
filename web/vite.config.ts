@@ -8,6 +8,8 @@ export default defineConfig({
   // O .env fica na raiz do repositório (compartilhado com o backend); o Vite
   // só expõe ao navegador as variáveis com prefixo VITE_.
   envDir: "..",
+  // Publicado em blynassessoria.com.br/app (a raiz é da landing).
+  base: "/app/",
   server: {
     port: 5173,
   },

@@ -10,7 +10,7 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-sidebar-bg border-r border-sidebar-border">
       <div className="flex h-20 items-center px-6 border-b border-sidebar-border">
-        <img src="/logo-blyn-branca.png" alt="Blyn" className="h-9 w-auto object-contain" />
+        <img src={`${import.meta.env.BASE_URL}logo-blyn-branca.png`} alt="Blyn" className="h-9 w-auto object-contain" />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
