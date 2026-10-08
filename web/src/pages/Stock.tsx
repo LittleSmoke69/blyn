@@ -1,5 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 
 interface Ingredient {
@@ -17,6 +18,7 @@ function formatBRL(value: number) {
 }
 
 export function Stock() {
+  const { ownerId } = useAuth();
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,6 +51,7 @@ export function Stock() {
     setMessage(null);
 
     const { error } = await supabase.from("stock_movements").insert({
+      user_id: ownerId,
       ingredient_id: ingredientId,
       type,
       quantity: Number(quantity),

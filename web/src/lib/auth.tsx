@@ -6,11 +6,15 @@ interface AuthState {
   loading: boolean;
   session: Session | null;
   restaurantName: string | null;
+  /** Dono efetivo da conta (o próprio uid, ou owner_id se for membro de equipe).
+   * Toda tabela com dono exige user_id = ownerId nos inserts (sem default no banco). */
+  ownerId: string | null;
   /** null = dono (acesso total); array = membro de equipe, só essas chaves */
   permissions: string[] | null;
   can: (key: string) => boolean;
   signIn: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -19,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [restaurantName, setRestaurantName] = useState<string | null>(null);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<string[] | null>(null);
 
   async function loadProfile(currentSession: Session) {
@@ -31,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     const ownerId = teamRow?.owner_id ?? uid;
+    setOwnerId(ownerId);
     setPermissions(teamRow ? (teamRow.permissions as string[]) : null);
 
     const { data: settings } = await supabase
@@ -54,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await loadProfile(newSession);
       } else {
         setRestaurantName(null);
+        setOwnerId(null);
         setPermissions(null);
       }
     });
@@ -72,13 +79,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error?.message ?? null;
   }
 
+  /** Recarrega nome do restaurante etc. depois de editar Configurações. */
+  async function refreshProfile() {
+    if (session) await loadProfile(session);
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
   }
 
   return (
     <AuthContext.Provider
-      value={{ loading, session, restaurantName, permissions, can, signIn, signOut }}
+      value={{ loading, session, restaurantName, ownerId, permissions, can, signIn, signOut, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

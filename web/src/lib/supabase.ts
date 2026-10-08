@@ -21,3 +21,18 @@ export const supabase = createClient(
     },
   }
 );
+
+// Cliente sempre anônimo pro cardápio digital público: sem sessão persistida,
+// então mesmo com alguém logado no app no mesmo navegador a página pública lê
+// as receitas pela policy de anon (recipes_public_select), igual um cliente.
+export const publicSupabase = createClient(
+  GATEWAY_URL || "http://localhost/gateway-nao-configurado",
+  "placeholder-o-gateway-ignora-isso",
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      storageKey: "blyn-public-menu",
+    },
+  }
+);

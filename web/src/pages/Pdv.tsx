@@ -1,5 +1,6 @@
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 
 interface Recipe {
@@ -26,6 +27,7 @@ function formatBRL(value: number) {
 }
 
 export function Pdv() {
+  const { ownerId } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [tables, setTables] = useState<TableOption[]>([]);
   const [search, setSearch] = useState("");
@@ -95,7 +97,7 @@ export function Pdv() {
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .insert({ table_id: tableId || null, payment_method: paymentMethod })
+      .insert({ user_id: ownerId, table_id: tableId || null, payment_method: paymentMethod })
       .select()
       .single();
 

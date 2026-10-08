@@ -1,5 +1,6 @@
 import { ArrowDownCircle, ArrowUpCircle, Plus } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 
 interface FinancialRecord {
@@ -22,6 +23,7 @@ function formatBRL(value: number) {
 }
 
 export function Financial() {
+  const { ownerId } = useAuth();
   const [records, setRecords] = useState<FinancialRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
@@ -68,6 +70,7 @@ export function Financial() {
     const categoryType = type === "income" ? "revenue" : category === "Aluguel" ? "fixed" : "variable";
 
     const { error } = await supabase.from("financial_records").insert({
+      user_id: ownerId,
       type,
       category,
       category_type: categoryType,
