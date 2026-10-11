@@ -1,4 +1,10 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AdminAccounts } from "./admin/AdminAccounts";
+import { AdminCrm } from "./admin/AdminCrm";
+import { AdminEvents } from "./admin/AdminEvents";
+import { AdminLayout } from "./admin/AdminLayout";
+import { AdminOverview } from "./admin/AdminOverview";
+import { AdminTasks } from "./admin/AdminTasks";
 import { ComingSoon } from "./components/ComingSoon";
 import { Layout } from "./components/Layout";
 import { NAV_ITEMS } from "./components/navItems";
@@ -42,7 +48,7 @@ const IMPLEMENTED: Record<string, React.ComponentType> = {
 };
 
 function Gate() {
-  const { loading, session, can } = useAuth();
+  const { loading, session, can, isAdmin } = useAuth();
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-muted">Carregando...</div>;
@@ -58,6 +64,18 @@ function Gate() {
 
   return (
     <Routes>
+      {/* Painel da equipe Blyn: só existe na árvore de rotas pra admin da
+          plataforma (a RLS bloqueia os dados de qualquer forma). */}
+      {isAdmin && (
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminOverview />} />
+          <Route path="crm" element={<AdminCrm />} />
+          <Route path="tasks" element={<AdminTasks />} />
+          <Route path="accounts" element={<AdminAccounts />} />
+          <Route path="events" element={<AdminEvents />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Route>
+      )}
       <Route element={<Layout />}>
         {NAV_ITEMS.filter((item) => can(item.permission)).map((item) => {
           const Component = IMPLEMENTED[item.path] ?? (() => <ComingSoon title={item.label} />);

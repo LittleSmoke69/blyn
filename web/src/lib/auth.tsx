@@ -9,6 +9,8 @@ interface AuthState {
   /** Dono efetivo da conta (o próprio uid, ou owner_id se for membro de equipe).
    * Toda tabela com dono exige user_id = ownerId nos inserts (sem default no banco). */
   ownerId: string | null;
+  /** Admin da PLATAFORMA (equipe Blyn) — libera o painel /admin. */
+  isAdmin: boolean;
   /** null = dono (acesso total); array = membro de equipe, só essas chaves */
   permissions: string[] | null;
   can: (key: string) => boolean;
@@ -24,16 +26,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [restaurantName, setRestaurantName] = useState<string | null>(null);
   const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [permissions, setPermissions] = useState<string[] | null>(null);
 
   async function loadProfile(currentSession: Session) {
     const uid = currentSession.user.id;
 
-    const { data: teamRow } = await supabase
-      .from("team_members")
-      .select("owner_id, permissions")
-      .eq("user_id", uid)
-      .maybeSingle();
+    const [{ data: teamRow }, { data: adminFlag }] = await Promise.all([
+      supabase.from("team_members").select("owner_id, permissions").eq("user_id", uid).maybeSingle(),
+      supabase.rpc("is_admin", { uid }),
+    ]);
+    setIsAdmin(adminFlag === true);
 
     const ownerId = teamRow?.owner_id ?? uid;
     setOwnerId(ownerId);
@@ -61,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setRestaurantName(null);
         setOwnerId(null);
+        setIsAdmin(false);
         setPermissions(null);
       }
     });
@@ -90,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ loading, session, restaurantName, ownerId, permissions, can, signIn, signOut, refreshProfile }}
+      value={{ loading, session, restaurantName, ownerId, isAdmin, permissions, can, signIn, signOut, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

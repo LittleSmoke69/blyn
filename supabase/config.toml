@@ -374,6 +374,10 @@ verify_jwt = false
 [functions.mercado-pago-webhook]
 verify_jwt = false
 
+# Formulários da landing page -> CRM interno (visitante anônimo).
+[functions.submit-lead]
+verify_jwt = false
+
 [functions.mercado-pago-webhook-test]
 verify_jwt = false
 

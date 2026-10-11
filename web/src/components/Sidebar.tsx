@@ -1,10 +1,10 @@
-import { LogOut } from "lucide-react";
+import { LogOut, ShieldCheck } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { NAV_ITEMS } from "./navItems";
 
 export function Sidebar() {
-  const { can, restaurantName, session, signOut } = useAuth();
+  const { can, isAdmin, restaurantName, session, signOut } = useAuth();
   const visibleItems = NAV_ITEMS.filter((item) => can(item.permission));
 
   return (
@@ -38,6 +38,15 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border p-3 space-y-2">
+        {isAdmin && (
+          <NavLink
+            to="/admin"
+            className="flex items-center gap-3 rounded-xl border border-green/40 px-3 py-2.5 text-[14px] font-semibold text-green hover:bg-green/10 transition-colors"
+          >
+            <ShieldCheck className="h-[18px] w-[18px]" />
+            Painel Admin
+          </NavLink>
+        )}
         <div className="rounded-xl bg-white/5 p-3">
           <p className="text-[13px] font-medium text-sidebar-text-hover truncate">
             {restaurantName ?? "Carregando..."}

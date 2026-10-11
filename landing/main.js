@@ -10,7 +10,33 @@ const CONFIG = {
   email: "contato@blyn.com.br",
   instagram: "blyn",                    // sem @
   whatsMessage: "Olá! Vim pelo site da Blyn e quero saber mais sobre a plataforma.",
+  // Grava as respostas dos formulários no CRM interno (Edge Function
+  // submit-lead, pelo gateway). Deixe vazio para só abrir o WhatsApp.
+  leadEndpoint: "https://blynassessoria.com.br/api/functions/v1/submit-lead",
 };
+
+/* UTMs da visita, guardadas pra acompanhar o lead até o envio do formulário */
+const UTM = (() => {
+  const params = new URLSearchParams(location.search);
+  const fresh = Object.fromEntries([...params].filter(([k]) => k.startsWith("utm_")));
+  try {
+    if (Object.keys(fresh).length) sessionStorage.setItem("blyn_utm", JSON.stringify(fresh));
+    return JSON.parse(sessionStorage.getItem("blyn_utm") || "null");
+  } catch {
+    return Object.keys(fresh).length ? fresh : null;
+  }
+})();
+
+function sendLead(form, data) {
+  if (!CONFIG.leadEndpoint) return;
+  // keepalive: o envio continua mesmo com a aba do WhatsApp abrindo por cima.
+  fetch(CONFIG.leadEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...data, source: form.dataset.leadSource || "landing", utm: UTM }),
+    keepalive: true,
+  }).catch(() => { /* o WhatsApp já abriu; não bloqueia o visitante */ });
+}
 
 const $ = (s, c = document) => c.querySelector(s);
 const $$ = (s, c = document) => [...c.querySelectorAll(s)];
@@ -172,6 +198,8 @@ $$("[data-whats-form]").forEach((form) => {
       return;
     }
     const data = Object.fromEntries(new FormData(form));
+    sendLead(form, data);
+    delete data.website;
     const labels = { nome: "Nome", email: "E-mail", whatsapp: "WhatsApp", delivery: "Delivery", instagram: "Instagram", desafio: "Principal desafio", mensagem: "Mensagem" };
     const lines = Object.entries(data).filter(([, v]) => v).map(([k, v]) => `*${labels[k] || k}:* ${v}`);
     const msg = `Olá! Quero uma demonstração da Blyn.\n\n${lines.join("\n")}`;
