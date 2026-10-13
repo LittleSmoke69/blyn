@@ -10,9 +10,11 @@ const CONFIG = {
   email: "contato@blyn.com.br",
   instagram: "blyn",                    // sem @
   whatsMessage: "Olá! Vim pelo site da Blyn e quero saber mais sobre a plataforma.",
-  // Grava as respostas dos formulários no CRM interno (Edge Function
-  // submit-lead, pelo gateway). Deixe vazio para só abrir o WhatsApp.
-  leadEndpoint: "https://blynassessoria.com.br/api/functions/v1/submit-lead",
+  // Base da API (gateway). Usada pra gravar os formulários no CRM interno
+  // (Edge Function submit-lead) e pra ler a config do formulário da hero,
+  // que é editável no painel admin. Deixe vazio para o site funcionar só com
+  // o formulário fixo do HTML + WhatsApp.
+  apiBase: "https://blynassessoria.com.br/api",
 };
 
 /* UTMs da visita, guardadas pra acompanhar o lead até o envio do formulário */
@@ -28,9 +30,9 @@ const UTM = (() => {
 })();
 
 function sendLead(form, data) {
-  if (!CONFIG.leadEndpoint) return;
+  if (!CONFIG.apiBase) return;
   // keepalive: o envio continua mesmo com a aba do WhatsApp abrindo por cima.
-  fetch(CONFIG.leadEndpoint, {
+  fetch(`${CONFIG.apiBase}/functions/v1/submit-lead`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...data, source: form.dataset.leadSource || "landing", utm: UTM }),
@@ -174,14 +176,18 @@ function closeQa(d) {
 function refresh() { if (hasGsap) ScrollTrigger.refresh(); }
 
 /* ---------- formulários -> WhatsApp ---------- */
-$$("[data-phone]").forEach((inp) => {
-  inp.addEventListener("input", () => {
-    let v = inp.value.replace(/\D/g, "").slice(0, 11);
-    if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
-    else if (v.length > 6) v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
-    else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, "($1) $2");
-    inp.value = v;
-  });
+// Delegação no document: vale também pros campos que o formulário da hero
+// cria dinamicamente a partir da config do painel admin.
+document.addEventListener("input", (e) => {
+  const inp = e.target;
+  if (!(inp instanceof HTMLElement)) return;
+  inp.closest(".field")?.classList.remove("is-error");
+  if (!inp.matches("[data-phone]")) return;
+  let v = inp.value.replace(/\D/g, "").slice(0, 11);
+  if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
+  else if (v.length > 6) v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+  else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, "($1) $2");
+  inp.value = v;
 });
 
 $$("[data-whats-form]").forEach((form) => {
@@ -201,7 +207,8 @@ $$("[data-whats-form]").forEach((form) => {
     sendLead(form, data);
     delete data.website;
     const labels = { nome: "Nome", email: "E-mail", whatsapp: "WhatsApp", delivery: "Delivery", instagram: "Instagram", desafio: "Principal desafio", mensagem: "Mensagem" };
-    const lines = Object.entries(data).filter(([, v]) => v).map(([k, v]) => `*${labels[k] || k}:* ${v}`);
+    const labelOf = (k) => form.elements[k]?.dataset?.label || labels[k] || k;
+    const lines = Object.entries(data).filter(([, v]) => v).map(([k, v]) => `*${labelOf(k)}:* ${v}`);
     const msg = `Olá! Quero uma demonstração da Blyn.\n\n${lines.join("\n")}`;
     window.open(whatsUrl(msg), "_blank", "noopener");
 
@@ -211,8 +218,59 @@ $$("[data-whats-form]").forEach((form) => {
     form.reset();
     setTimeout(() => (btn.textContent = old), 3500);
   });
-  $$("input, select, textarea", form).forEach((f) => f.addEventListener("input", () => f.closest(".field")?.classList.remove("is-error")));
 });
+
+/* ---------- formulário da hero: config editável no painel admin ---------- */
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+function fieldHtml(f) {
+  const ph = esc((f.placeholder || f.label) + (f.required ? " *" : ""));
+  const common = `name="${esc(f.key)}" data-label="${esc(f.label)}"${f.required ? " required" : ""}`;
+  let control;
+  if (f.type === "select") {
+    control = `<select ${common}><option value="" disabled selected>${ph}</option>${(f.options || []).map((o) => `<option>${esc(o)}</option>`).join("")}</select>`;
+  } else if (f.type === "textarea") {
+    control = `<textarea ${common} rows="3" placeholder="${ph}"></textarea>`;
+  } else {
+    const type = f.type === "email" ? "email" : f.type === "tel" ? "tel" : "text";
+    const auto = f.key === "nome" ? ' autocomplete="name"' : type === "email" ? ' autocomplete="email"' : type === "tel" ? ' autocomplete="tel" data-phone' : "";
+    control = `<input ${common} type="${type}" placeholder="${ph}"${auto} />`;
+  }
+  return `<label class="field${f.type === "select" ? " field--select" : ""}"><span class="sr">${esc(f.label)}</span>${control}</label>`;
+}
+
+function renderHeroForm(cfg) {
+  const form = $("#form-hero");
+  if (!form || !Array.isArray(cfg.fields) || !cfg.fields.length) return;
+  // Campos "half" consecutivos ficam lado a lado, de dois em dois.
+  let body = "";
+  for (let i = 0; i < cfg.fields.length; i++) {
+    const f = cfg.fields[i];
+    const next = cfg.fields[i + 1];
+    if (f.half && next?.half) {
+      body += `<div class="formcard__row">${fieldHtml(f)}${fieldHtml(next)}</div>`;
+      i++;
+    } else {
+      body += fieldHtml(f);
+    }
+  }
+  form.innerHTML = `
+    <label class="hp" aria-hidden="true">Site<input name="website" tabindex="-1" autocomplete="off" /></label>
+    <h2 class="formcard__title">${esc(cfg.title)}</h2>
+    ${cfg.subtitle ? `<p class="formcard__sub">${esc(cfg.subtitle)}</p>` : ""}
+    ${body}
+    <button class="btn btn--primary btn--block" type="submit"><span>${esc(cfg.button_label || "Enviar")}</span></button>
+    ${cfg.safe_note ? `<p class="formcard__safe">${esc(cfg.safe_note)}</p>` : ""}`;
+  if (motion) gsap.from($$(".field, .btn", form), { y: 12, opacity: 0, duration: .5, stagger: .04, ease: "power2.out" });
+}
+
+// Se a API falhar, o formulário fixo do HTML continua valendo.
+if (CONFIG.apiBase) {
+  fetch(`${CONFIG.apiBase}/rest/v1/site_forms?id=eq.hero&select=title,subtitle,button_label,safe_note,fields`)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((rows) => rows?.[0] && renderHeroForm(rows[0]))
+    .catch(() => {});
+}
 
 /* ---------- lightbox dos prints de resultado ---------- */
 const lightbox = $("#lightbox");

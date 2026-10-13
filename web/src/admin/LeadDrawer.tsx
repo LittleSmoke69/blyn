@@ -235,13 +235,22 @@ export function LeadDrawer({
                 )}
               </div>
 
-              {(lead.challenge || lead.message || lead.utm) && (
+              {(lead.answers?.length || lead.challenge || lead.message || lead.utm) && (
                 <section className="bg-card border border-border rounded-2xl p-5 text-sm space-y-2">
                   <h3 className="text-sm uppercase tracking-wide text-muted">Respostas do formulário</h3>
-                  {lead.challenge && (
+                  {lead.answers?.length ? (
+                    <dl className="grid grid-cols-[minmax(140px,auto)_1fr] gap-x-4 gap-y-1.5">
+                      {lead.answers.map((a) => (
+                        <div key={a.key} className="contents">
+                          <dt className="text-muted">{a.label}</dt>
+                          <dd className="font-medium whitespace-pre-wrap break-words">{a.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : lead.challenge && (
                     <p><span className="text-muted">Principal desafio:</span> <strong>{lead.challenge}</strong></p>
                   )}
-                  {lead.message && <p className="whitespace-pre-wrap"><span className="text-muted">Mensagem:</span> {lead.message}</p>}
+                  {!lead.answers?.length && lead.message && <p className="whitespace-pre-wrap"><span className="text-muted">Mensagem:</span> {lead.message}</p>}
                   {lead.utm && Object.keys(lead.utm).length > 0 && (
                     <p className="text-xs text-muted">
                       {Object.entries(lead.utm).map(([k, v]) => `${k.replace("utm_", "")}: ${v}`).join(" · ")}

@@ -22,6 +22,8 @@ export interface Lead {
   next_follow_up: string | null;
   lost_reason: string | null;
   utm: Record<string, string> | null;
+  /** Todas as respostas do formulário, com o rótulo usado no envio. */
+  answers: { key: string; label: string; value: string }[] | null;
   last_activity_at: string;
   created_at: string;
 }
@@ -85,7 +87,7 @@ export const SOURCE_LABEL: Record<string, string> = {
 };
 
 export const LEAD_SELECT =
-  "id, name, email, whatsapp, business_name, instagram, challenge, message, source, stage, position, estimated_value, assigned_to, account_user_id, next_follow_up, lost_reason, utm, last_activity_at, created_at";
+  "id, name, email, whatsapp, business_name, instagram, challenge, message, source, stage, position, estimated_value, assigned_to, account_user_id, next_follow_up, lost_reason, utm, answers, last_activity_at, created_at";
 
 export function whatsappLink(phone: string, text = "") {
   let digits = phone.replace(/\D/g, "");

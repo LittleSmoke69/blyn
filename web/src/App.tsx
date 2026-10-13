@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AdminAccounts } from "./admin/AdminAccounts";
 import { AdminCrm } from "./admin/AdminCrm";
 import { AdminEvents } from "./admin/AdminEvents";
+import { AdminForms } from "./admin/AdminForms";
 import { AdminLayout } from "./admin/AdminLayout";
 import { AdminOverview } from "./admin/AdminOverview";
 import { AdminTasks } from "./admin/AdminTasks";
@@ -72,6 +73,7 @@ function Gate() {
           <Route path="crm" element={<AdminCrm />} />
           <Route path="tasks" element={<AdminTasks />} />
           <Route path="accounts" element={<AdminAccounts />} />
+          <Route path="forms" element={<AdminForms />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Route>
