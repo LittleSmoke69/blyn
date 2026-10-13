@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AdminAccounts } from "./admin/AdminAccounts";
+import { AdminAi } from "./admin/AdminAi";
 import { AdminCrm } from "./admin/AdminCrm";
 import { AdminEvents } from "./admin/AdminEvents";
 import { AdminForms } from "./admin/AdminForms";
@@ -93,6 +94,7 @@ function Gate() {
           <Route path="tasks" element={<AdminTasks />} />
           <Route path="accounts" element={<AdminAccounts />} />
           <Route path="plans" element={<AdminPlans />} />
+          <Route path="ai" element={<AdminAi />} />
           <Route path="forms" element={<AdminForms />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />

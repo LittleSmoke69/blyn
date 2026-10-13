@@ -1,5 +1,6 @@
-import { ArrowDownCircle, ArrowUpCircle, Plus } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, Plus, ScanLine } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { EXPENSE_CATEGORIES, PAYMENT_METHODS, ReceiptScanner } from "../components/ReceiptScanner";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 
@@ -15,15 +16,15 @@ interface FinancialRecord {
 }
 
 const INCOME_CATEGORIES = ["Vendas", "Serviços", "Outros"];
-const EXPENSE_CATEGORIES = ["Fornecedores", "Funcionários", "Aluguel", "Utilidades", "Marketing", "Outros"];
-const PAYMENT_METHODS = ["Dinheiro", "Cartão de Crédito", "Cartão de Débito", "Pix", "Transferência"];
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 export function Financial() {
-  const { ownerId } = useAuth();
+  const { ownerId, can } = useAuth();
+  const [scannerEnabled, setScannerEnabled] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [records, setRecords] = useState<FinancialRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
@@ -40,6 +41,13 @@ export function Financial() {
 
   useEffect(() => {
     load();
+    // O scanner só aparece se a equipe Blyn tiver ligado a funcionalidade no painel de IA.
+    supabase
+      .from("ai_features")
+      .select("enabled")
+      .eq("key", "receipt_scanner")
+      .maybeSingle()
+      .then(({ data }) => setScannerEnabled(data?.enabled === true));
   }, []);
 
   async function load() {
@@ -95,15 +103,35 @@ export function Financial() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl">Financeiro</h1>
+        <div className="flex flex-wrap gap-2">
+        {scannerEnabled && can("financial.manage") && (
+          <button
+            onClick={() => setScanning(true)}
+            className="flex items-center gap-2 rounded-lg border border-green text-green-dark font-semibold px-4 py-2 text-sm hover:bg-green/10 transition-colors"
+          >
+            <ScanLine className="h-4 w-4" /> Escanear nota
+          </button>
+        )}
         <button
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 rounded-lg bg-green text-white font-semibold px-4 py-2 text-sm hover:bg-green-dark transition-colors"
         >
           <Plus className="h-4 w-4" /> Novo Lançamento
         </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      {scanning && (
+        <ReceiptScanner
+          onClose={() => setScanning(false)}
+          onSaved={() => {
+            setScanning(false);
+            load();
+          }}
+        />
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4">
           <ArrowUpCircle className="h-8 w-8 text-green" />
           <div>
@@ -127,7 +155,7 @@ export function Financial() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-5 mb-6 grid grid-cols-5 gap-3 items-end">
+        <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-5 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
           <div>
             <label className="block text-xs font-medium text-muted mb-1">Tipo</label>
             <select

@@ -1,4 +1,4 @@
-import { ArrowLeft, Building2, CheckSquare, FormInput, Kanban, LayoutDashboard, LogOut, Tag, Webhook } from "lucide-react";
+import { ArrowLeft, Bot, Building2, CheckSquare, FormInput, Kanban, LayoutDashboard, LogOut, Tag, Webhook } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { MobileShell } from "../components/MobileShell";
 import { useAuth } from "../lib/auth";
@@ -9,6 +9,7 @@ const ADMIN_NAV = [
   { label: "Tarefas", path: "/admin/tasks", icon: CheckSquare },
   { label: "Contas", path: "/admin/accounts", icon: Building2 },
   { label: "Planos", path: "/admin/plans", icon: Tag },
+  { label: "Inteligência Artificial", path: "/admin/ai", icon: Bot },
   { label: "Formulário do site", path: "/admin/forms", icon: FormInput },
   { label: "Webhooks", path: "/admin/events", icon: Webhook },
 ];
