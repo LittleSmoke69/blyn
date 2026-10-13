@@ -9,8 +9,10 @@
 //     essa lógica aqui.
 //   - update: edita campos de profiles/restaurant_settings de QUALQUER
 //     empresa (as tables só têm policy de UPDATE pro próprio dono).
-//   - activate_subscription: ativa um plano mensal ou anual, calculando
-//     expires_at a partir do billing_cycle.
+//   - activate_subscription: ativa um plano cadastrado em "plans" (painel
+//     admin > Planos). A validade soma duration_days a partir de hoje — ou do
+//     vencimento atual, se a assinatura ainda estiver ativa (renovação
+//     antecipada não perde os dias que faltavam).
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { getAdminClient } from "../_shared/supabaseAdmin.ts";
 import { AdminAuthError, requireAdmin } from "../_shared/requireAdmin.ts";
@@ -23,13 +25,8 @@ interface Payload {
   password?: string;
   phone?: string;
   address?: string;
-  billing_cycle?: "monthly" | "annual";
+  plan_id?: string; // obrigatório em activate_subscription
 }
-
-const CYCLE_TO_INTERVAL: Record<string, string> = {
-  monthly: "1 month",
-  annual: "1 year",
-};
 
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
@@ -122,19 +119,38 @@ Deno.serve(async (req) => {
     if (!payload.user_id) {
       return jsonResponse({ error: "user_id é obrigatório" }, 400);
     }
-    if (!payload.billing_cycle || !CYCLE_TO_INTERVAL[payload.billing_cycle]) {
-      return jsonResponse({ error: "billing_cycle deve ser 'monthly' ou 'annual'" }, 400);
+    if (!payload.plan_id) {
+      return jsonResponse({ error: "plan_id é obrigatório" }, 400);
     }
+
+    const { data: plan, error: planError } = await admin
+      .from("plans")
+      .select("id, name, billing_cycle, duration_days, active")
+      .eq("id", payload.plan_id)
+      .maybeSingle();
+    if (planError) return jsonResponse({ error: planError.message }, 400);
+    if (!plan || !plan.active) return jsonResponse({ error: "plano não encontrado ou inativo" }, 400);
+
+    const { data: current, error: currentError } = await admin
+      .from("subscriptions")
+      .select("status, expires_at")
+      .eq("user_id", payload.user_id)
+      .maybeSingle();
+    if (currentError) return jsonResponse({ error: currentError.message }, 400);
+    if (!current) return jsonResponse({ error: "conta sem assinatura" }, 404);
+
+    const now = Date.now();
+    const currentEnd = current.expires_at ? new Date(current.expires_at).getTime() : 0;
+    const base = current.status === "active" && currentEnd > now ? currentEnd : now;
 
     const { data: row, error } = await admin
       .from("subscriptions")
       .update({
         status: "active",
-        plan: "pro",
-        billing_cycle: payload.billing_cycle,
-        expires_at: new Date(
-          Date.now() + (payload.billing_cycle === "annual" ? 365 : 30) * 24 * 60 * 60 * 1000
-        ).toISOString(),
+        plan: plan.name,
+        plan_id: plan.id,
+        billing_cycle: plan.billing_cycle,
+        expires_at: new Date(base + plan.duration_days * 24 * 60 * 60 * 1000).toISOString(),
       })
       .eq("user_id", payload.user_id)
       .select()

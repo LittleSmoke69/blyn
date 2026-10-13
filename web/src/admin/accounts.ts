@@ -9,6 +9,7 @@ export interface Account {
   created_at: string;
   last_sign_in_at: string | null;
   status: SubStatus | null;
+  plan: string | null;
   billing_cycle: "monthly" | "semiannual" | "annual" | null;
   trial_end_date: string | null;
   expires_at: string | null;

@@ -5,6 +5,7 @@ import { ErrorBanner, Field, Modal, PageHeader, PillTabs, StatCard, inputClass, 
 import { formatDate, formatDateTime } from "../lib/format";
 import { supabase } from "../lib/supabase";
 import { STATUS_BADGE, STATUS_LABEL, effectiveStatus, type Account, type SubStatus } from "./accounts";
+import { CYCLE_LABEL, formatPlanPrice, type Plan } from "./plans";
 
 async function callAccounts(body: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke("admin-manage-accounts", { body });
@@ -139,8 +140,8 @@ export function AdminAccounts() {
                     </td>
                     <td className="px-5 py-3">
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BADGE[st]}`}>{STATUS_LABEL[st]}</span>
-                      {a.status === "active" && a.billing_cycle && (
-                        <span className="text-xs text-muted ml-2">{a.billing_cycle === "annual" ? "anual" : a.billing_cycle === "semiannual" ? "semestral" : "mensal"}</span>
+                      {a.status === "active" && (a.plan || a.billing_cycle) && (
+                        <span className="text-xs text-muted ml-2">{a.plan ?? CYCLE_LABEL[a.billing_cycle!]}</span>
                       )}
                     </td>
                     <td className="px-5 py-3 text-muted">{ends ? formatDate(ends) : "—"}</td>
@@ -270,13 +271,35 @@ function EditAccountModal({ account, onClose, onDone }: { account: Account; onCl
 }
 
 function ActivateModal({ account, onClose, onDone }: { account: Account; onClose: () => void; onDone: () => void }) {
-  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
+  const [plans, setPlans] = useState<Plan[] | null>(null);
+  const [planId, setPlanId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    supabase
+      .from("plans")
+      .select("*")
+      .eq("active", true)
+      .order("duration_days")
+      .then(({ data, error }) => {
+        if (error) setError(error.message);
+        const list = (data as Plan[]) ?? [];
+        setPlans(list);
+        setPlanId(list[0]?.id ?? null);
+      });
+  }, []);
+
+  const selected = plans?.find((p) => p.id === planId) ?? null;
+  // Mesma regra da Edge Function: assinatura ativa e ainda válida soma a partir do vencimento.
+  const renewing = account.status === "active" && !!account.expires_at && new Date(account.expires_at).getTime() > Date.now();
+  const base = renewing ? new Date(account.expires_at!) : new Date();
+  const newEnd = selected ? new Date(base.getTime() + selected.duration_days * 86_400_000) : null;
+
   async function submit() {
+    if (!planId) return;
     setSaving(true);
-    const res = await callAccounts({ action: "activate_subscription", user_id: account.user_id, billing_cycle: cycle });
+    const res = await callAccounts({ action: "activate_subscription", user_id: account.user_id, plan_id: planId });
     setSaving(false);
     if (res.error) setError(res.error);
     else onDone();
@@ -286,26 +309,39 @@ function ActivateModal({ account, onClose, onDone }: { account: Account; onClose
     <Modal title="Ativar / renovar plano" onClose={onClose}>
       <div className="space-y-4">
         <p className="text-sm">
-          Ativar o plano Pro para <strong>{account.restaurant_name}</strong>. A validade conta a partir de hoje
-          ({cycle === "annual" ? "365" : "30"} dias).
+          Escolha o plano para <strong>{account.restaurant_name}</strong>.
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          {(["monthly", "annual"] as const).map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCycle(c)}
-              className={`rounded-xl border p-4 text-left ${cycle === c ? "border-green bg-green/5" : "border-border"}`}
-            >
-              <p className="font-semibold">{c === "monthly" ? "Mensal" : "Anual"}</p>
-              <p className="text-xs text-muted">{c === "monthly" ? "30 dias" : "365 dias"}</p>
-            </button>
-          ))}
-        </div>
+        {plans === null ? (
+          <p className="text-sm text-muted">Carregando planos...</p>
+        ) : plans.length === 0 ? (
+          <p className="text-sm text-muted">
+            Nenhum plano ativo. Cadastre um em <Link to="/admin/plans" className="text-green-dark underline">Planos</Link>.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {plans.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPlanId(p.id)}
+                className={`rounded-xl border p-4 text-left ${planId === p.id ? "border-green bg-green/5" : "border-border"}`}
+              >
+                <p className="font-semibold">{p.name}</p>
+                <p className="text-xs text-muted">{CYCLE_LABEL[p.billing_cycle]} · {p.duration_days} dias</p>
+                <p className="text-sm mt-1">{formatPlanPrice(p.price_cents)}</p>
+              </button>
+            ))}
+          </div>
+        )}
+        {newEnd && (
+          <p className="text-xs text-muted">
+            {renewing ? "Renovação: soma ao vencimento atual" : "Validade a partir de hoje"} — vence em {formatDate(newEnd.toISOString())}.
+          </p>
+        )}
         {error && <p className="text-sm text-red">{error}</p>}
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className={secondaryButton}>Cancelar</button>
-          <button onClick={submit} disabled={saving} className={primaryButton}>{saving ? "Ativando..." : "Ativar plano"}</button>
+          <button onClick={submit} disabled={saving || !planId} className={primaryButton}>{saving ? "Ativando..." : "Ativar plano"}</button>
         </div>
       </div>
     </Modal>

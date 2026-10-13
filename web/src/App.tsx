@@ -6,6 +6,7 @@ import { AdminEvents } from "./admin/AdminEvents";
 import { AdminForms } from "./admin/AdminForms";
 import { AdminLayout } from "./admin/AdminLayout";
 import { AdminOverview } from "./admin/AdminOverview";
+import { AdminPlans } from "./admin/AdminPlans";
 import { AdminTasks } from "./admin/AdminTasks";
 import { ComingSoon } from "./components/ComingSoon";
 import { AccessBlocked } from "./components/AccessBlocked";
@@ -91,6 +92,7 @@ function Gate() {
           <Route path="crm" element={<AdminCrm />} />
           <Route path="tasks" element={<AdminTasks />} />
           <Route path="accounts" element={<AdminAccounts />} />
+          <Route path="plans" element={<AdminPlans />} />
           <Route path="forms" element={<AdminForms />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
