@@ -1,7 +1,8 @@
-import { Building2, Crown, ExternalLink, Pencil, Plus, Search } from "lucide-react";
+import { Building2, Crown, ExternalLink, Pencil, Plus, Search, ShieldCheck, ShieldOff } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { ErrorBanner, Field, Modal, PageHeader, PillTabs, StatCard, inputClass, primaryButton, secondaryButton } from "../components/ui";
+import { useAuth } from "../lib/auth";
 import { formatDate, formatDateTime } from "../lib/format";
 import { supabase } from "../lib/supabase";
 import { STATUS_BADGE, STATUS_LABEL, effectiveStatus, type Account, type SubStatus } from "./accounts";
@@ -23,6 +24,14 @@ async function callAccounts(body: Record<string, unknown>) {
 
 type Filter = "all" | SubStatus;
 
+interface RoleChange {
+  id: number;
+  target_email: string;
+  action: "grant" | "revoke";
+  changed_by_email: string | null;
+  created_at: string;
+}
+
 export function AdminAccounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [leadByAccount, setLeadByAccount] = useState<Map<string, string>>(new Map());
@@ -33,16 +42,21 @@ export function AdminAccounts() {
   const [editing, setEditing] = useState<Account | null>(null);
   const [activating, setActivating] = useState<Account | null>(null);
   const [creating, setCreating] = useState(false);
+  const [changingRole, setChangingRole] = useState<Account | null>(null);
+  const [roleChanges, setRoleChanges] = useState<RoleChange[]>([]);
+  const { session } = useAuth();
 
   useEffect(() => {
     load();
   }, []);
 
   async function load() {
-    const [accRes, leadRes] = await Promise.all([
+    const [accRes, leadRes, roleRes] = await Promise.all([
       supabase.rpc("admin_list_accounts"),
       supabase.from("crm_leads").select("id, account_user_id").not("account_user_id", "is", null),
+      supabase.from("admin_role_changes").select("*").order("created_at", { ascending: false }).limit(10),
     ]);
+    setRoleChanges((roleRes.data as RoleChange[]) ?? []);
     if (accRes.error) setError(accRes.error.message);
     // Membros de equipe também ganham profile pelo trigger de signup, mas não
     // são clientes — ficam fora da lista de contas.
@@ -165,6 +179,15 @@ export function AdminAccounts() {
                         <button onClick={() => setActivating(a)} className="p-1.5 rounded hover:bg-green/10 text-green-dark" title="Ativar / renovar plano">
                           <Crown className="h-4 w-4" />
                         </button>
+                        {a.user_id !== session?.user.id && (
+                          <button
+                            onClick={() => setChangingRole(a)}
+                            className={`p-1.5 rounded ${a.is_platform_admin ? "hover:bg-red/10 text-red" : "hover:bg-bg text-muted"}`}
+                            title={a.is_platform_admin ? "Remover admin" : "Tornar admin"}
+                          >
+                            {a.is_platform_admin ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -177,6 +200,23 @@ export function AdminAccounts() {
 
       {creating && <CreateAccountModal onClose={() => setCreating(false)} onDone={() => { setCreating(false); load(); }} />}
       {editing && <EditAccountModal account={editing} onClose={() => setEditing(null)} onDone={() => { setEditing(null); load(); }} />}
+      {roleChanges.length > 0 && (
+        <div className="mt-6 bg-card border border-border rounded-2xl p-5">
+          <p className="font-semibold mb-3">Histórico de cargos de admin</p>
+          <ul className="space-y-1.5 text-sm">
+            {roleChanges.map((c) => (
+              <li key={c.id} className="flex flex-wrap gap-x-2 text-muted">
+                <span>{formatDateTime(c.created_at)}</span>
+                <span className="text-text">
+                  {c.changed_by_email ?? "—"} {c.action === "grant" ? "tornou admin" : "removeu o admin de"} <strong>{c.target_email}</strong>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {changingRole && <RoleModal account={changingRole} onClose={() => setChangingRole(null)} onDone={() => { setChangingRole(null); load(); }} />}
       {activating && <ActivateModal account={activating} onClose={() => setActivating(null)} onDone={() => { setActivating(null); load(); }} />}
     </div>
   );
@@ -342,6 +382,56 @@ function ActivateModal({ account, onClose, onDone }: { account: Account; onClose
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className={secondaryButton}>Cancelar</button>
           <button onClick={submit} disabled={saving || !planId} className={primaryButton}>{saving ? "Ativando..." : "Ativar plano"}</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function RoleModal({ account, onClose, onDone }: { account: Account; onClose: () => void; onDone: () => void }) {
+  const makeAdmin = !account.is_platform_admin;
+  const [confirmText, setConfirmText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const confirmed = !makeAdmin || confirmText.trim().toLowerCase() === account.email.toLowerCase();
+
+  async function submit() {
+    setSaving(true);
+    const { error } = await supabase.rpc("admin_set_platform_admin", { p_user_id: account.user_id, p_make_admin: makeAdmin });
+    setSaving(false);
+    if (error) setError(error.message);
+    else onDone();
+  }
+
+  return (
+    <Modal title={makeAdmin ? "Tornar admin da plataforma" : "Remover admin"} onClose={onClose}>
+      <div className="space-y-4 text-sm">
+        {makeAdmin ? (
+          <>
+            <p>
+              <strong>{account.restaurant_name}</strong> ({account.email}) vai ter acesso total ao Painel Admin: todos os
+              restaurantes, assinaturas e planos, o CRM com os leads, a configuração de IA e o cargo de outros admins.
+            </p>
+            <Field label={`Para confirmar, digite o e-mail ${account.email}`}>
+              <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} className={inputClass} autoComplete="off" />
+            </Field>
+          </>
+        ) : (
+          <p>
+            <strong>{account.restaurant_name}</strong> ({account.email}) perde o acesso ao Painel Admin. A conta continua
+            existindo como usuário normal. A mudança vale no próximo carregamento do app dessa pessoa.
+          </p>
+        )}
+        {error && <p className="text-red">{error}</p>}
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className={secondaryButton}>Cancelar</button>
+          <button
+            onClick={submit}
+            disabled={saving || !confirmed}
+            className={makeAdmin ? primaryButton : `${primaryButton} !bg-red hover:!bg-red/90`}
+          >
+            {saving ? "Salvando..." : makeAdmin ? "Tornar admin" : "Remover admin"}
+          </button>
         </div>
       </div>
     </Modal>
