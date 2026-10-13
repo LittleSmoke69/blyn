@@ -62,6 +62,9 @@ export function Login() {
             </button>
           </form>
         </div>
+        <p className="mt-6 text-center text-sm text-muted">
+          <a href="/" className="hover:text-green-dark">← Voltar para o site</a>
+        </p>
       </div>
     </div>
   );

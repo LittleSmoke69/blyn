@@ -8,7 +8,7 @@ export function Sidebar() {
   const visibleItems = NAV_ITEMS.filter((item) => can(item.permission));
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-sidebar-bg border-r border-sidebar-border">
+    <aside className="flex h-full w-64 flex-col bg-sidebar-bg border-r border-sidebar-border">
       <div className="flex h-20 items-center px-6 border-b border-sidebar-border">
         <img src={`${import.meta.env.BASE_URL}logo-blyn-branca.png`} alt="Blyn" className="h-9 w-auto object-contain" />
       </div>
@@ -49,7 +49,7 @@ export function Sidebar() {
         )}
         <div className="rounded-xl bg-white/5 p-3">
           <p className="text-[13px] font-medium text-sidebar-text-hover truncate">
-            {restaurantName ?? "Carregando..."}
+            {restaurantName ?? "Sem nome"}
           </p>
           <p className="text-[11px] text-sidebar-text truncate mt-0.5">{session?.user.email}</p>
         </div>

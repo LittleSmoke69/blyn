@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AdminAccounts } from "./admin/AdminAccounts";
 import { AdminCrm } from "./admin/AdminCrm";
 import { AdminEvents } from "./admin/AdminEvents";
@@ -7,6 +8,7 @@ import { AdminLayout } from "./admin/AdminLayout";
 import { AdminOverview } from "./admin/AdminOverview";
 import { AdminTasks } from "./admin/AdminTasks";
 import { ComingSoon } from "./components/ComingSoon";
+import { AccessBlocked } from "./components/AccessBlocked";
 import { Layout } from "./components/Layout";
 import { NAV_ITEMS } from "./components/navItems";
 import { AuthProvider, useAuth } from "./lib/auth";
@@ -49,7 +51,17 @@ const IMPLEMENTED: Record<string, React.ComponentType> = {
 };
 
 function Gate() {
-  const { loading, session, can, isAdmin } = useAuth();
+  const { loading, session, can, isAdmin, access, freshLogin, clearFreshLogin } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Admin da plataforma que acabou de entrar pela tela de login vai direto pro
+  // painel — a menos que tenha aberto um link específico (ex.: /app/admin/crm).
+  useEffect(() => {
+    if (loading || !session || !freshLogin) return;
+    clearFreshLogin();
+    if (isAdmin && location.pathname === "/") navigate("/admin", { replace: true });
+  }, [loading, session, freshLogin, isAdmin, location.pathname, navigate, clearFreshLogin]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-muted">Carregando...</div>;
@@ -57,6 +69,12 @@ function Gate() {
 
   if (!session) {
     return <Login />;
+  }
+
+  // Assinatura vencida/cancelada: nenhuma tela do sistema, só o aviso.
+  // (access null = consulta falhou; não tranca ninguém por erro de rede.)
+  if (!isAdmin && access && !access.allowed) {
+    return <AccessBlocked />;
   }
 
   // Primeira tela que o usuário pode ver — membro de equipe sem dashboard.view
