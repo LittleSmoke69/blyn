@@ -154,7 +154,7 @@ export function AdminAccounts() {
                           </Link>
                         )}
                         {a.slug && (
-                          <a href={`/cardapio/${a.slug}`} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-bg text-muted" title="Cardápio digital">
+                          <a href={`${import.meta.env.BASE_URL}cardapio/${a.slug}`} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-bg text-muted" title="Cardápio digital">
                             <ExternalLink className="h-4 w-4" />
                           </a>
                         )}

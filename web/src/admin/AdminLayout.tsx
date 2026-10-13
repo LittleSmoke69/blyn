@@ -18,7 +18,7 @@ export function AdminLayout() {
     <div className="min-h-screen bg-bg">
       <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-sidebar-bg border-r border-sidebar-border">
         <div className="flex h-20 items-center gap-3 px-6 border-b border-sidebar-border">
-          <img src="/logo-blyn-branca.png" alt="Blyn" className="h-8 w-auto object-contain" />
+          <img src={`${import.meta.env.BASE_URL}logo-blyn-branca.png`} alt="Blyn" className="h-8 w-auto object-contain" />
           <span className="text-[10px] font-bold uppercase tracking-wider rounded-full bg-green text-sidebar-bg px-2 py-0.5">Admin</span>
         </div>
 
