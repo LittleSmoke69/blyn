@@ -92,7 +92,7 @@ export function AdminAccounts() {
 
       <ErrorBanner message={error} />
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <StatCard label="Total de contas" value={accounts.length} />
         <StatCard label="Assinantes ativos" value={counts.active} valueClassName="text-green-dark" />
         <StatCard label="Em teste" value={counts.trial} valueClassName="text-blue-700" />
@@ -117,8 +117,8 @@ export function AdminAccounts() {
         />
       </div>
 
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-x-auto">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-bg text-muted text-xs uppercase">
             <tr>
               <th className="text-left px-5 py-3 font-medium">Restaurante</th>

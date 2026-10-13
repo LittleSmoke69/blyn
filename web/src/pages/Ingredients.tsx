@@ -193,8 +193,8 @@ export function Ingredients() {
           }
         />
       ) : (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-card border border-border rounded-2xl overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-bg text-muted text-xs uppercase">
               <tr>
                 <th className="text-left px-5 py-3 font-medium">Nome</th>
@@ -250,8 +250,8 @@ export function Ingredients() {
 
       {showForm && (
         <Modal title={editing ? "Editar ingrediente" : "Novo ingrediente"} onClose={() => setShowForm(false)}>
-          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
-            <Field label="Nome" className="col-span-2">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Nome" className="col-span-full">
               <input required value={form.name} onChange={update("name")} className={inputClass} />
             </Field>
             <Field label="Categoria">
@@ -280,11 +280,11 @@ export function Ingredients() {
             <Field label="Fornecedor">
               <input value={form.supplier} onChange={update("supplier")} className={inputClass} />
             </Field>
-            <p className="col-span-2 text-xs text-muted">
+            <p className="col-span-full text-xs text-muted">
               O estoque atual é controlado pela tela de Estoque (entradas e ajustes) e pelas vendas.
             </p>
-            {formError && <p className="col-span-2 text-sm text-red">{formError}</p>}
-            <div className="col-span-2 flex justify-end gap-2 pt-2">
+            {formError && <p className="col-span-full text-sm text-red">{formError}</p>}
+            <div className="col-span-full flex justify-end gap-2 pt-2">
               <button type="button" onClick={() => setShowForm(false)} className={secondaryButton}>Cancelar</button>
               <button type="submit" disabled={saving} className={primaryButton}>{saving ? "Salvando..." : "Salvar"}</button>
             </div>

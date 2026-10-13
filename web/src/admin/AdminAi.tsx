@@ -319,8 +319,8 @@ function UsageSection({
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-card border border-border rounded-2xl overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-bg text-muted text-xs uppercase">
               <tr>
                 <th className="text-left px-5 py-3 font-medium">Restaurante</th>

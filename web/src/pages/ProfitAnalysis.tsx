@@ -122,7 +122,7 @@ export function ProfitAnalysis() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
             <StatCard label="Margem média" value={formatPercent(summary.avgMargin)} valueClassName="text-green-dark" />
             <StatCard label="Prato mais rentável" value={<span className="text-lg">{summary.best?.name ?? "—"}</span>} />
             <StatCard label="Lucro bruto (30 dias)" value={formatBRL(summary.totalProfit)} />
@@ -166,8 +166,8 @@ export function ProfitAnalysis() {
             />
           </div>
 
-          <div className="bg-card border border-border rounded-2xl overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="bg-card border border-border rounded-2xl overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-bg text-muted text-xs uppercase">
                 <tr>
                   <th className="text-left px-5 py-3 font-medium">Prato</th>

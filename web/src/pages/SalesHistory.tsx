@@ -93,7 +93,7 @@ export function SalesHistory() {
         </select>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <StatCard label="Vendas fechadas" value={loading ? "..." : stats.count} />
         <StatCard label="Faturamento" value={loading ? "..." : formatBRL(stats.revenue)} valueClassName="text-green-dark" />
         <StatCard label="Ticket médio" value={loading ? "..." : formatBRL(stats.ticket)} />
@@ -103,8 +103,8 @@ export function SalesHistory() {
       {!loading && filtered.length === 0 ? (
         <EmptyState icon={ClipboardList} title="Nenhuma venda no período" description="As vendas finalizadas no PDV e nas mesas aparecem aqui." />
       ) : (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-card border border-border rounded-2xl overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-bg text-muted text-xs uppercase">
               <tr>
                 <th className="w-10" />

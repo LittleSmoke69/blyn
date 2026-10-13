@@ -293,7 +293,7 @@ export function Reports() {
 
       <ErrorBanner message={error} />
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {REPORTS.map((r) => (
           <div key={r.key} className="bg-card border border-border rounded-2xl p-5 flex flex-col">
             <div className={`h-11 w-11 rounded-xl ${r.color} text-white flex items-center justify-center mb-4`}>
@@ -313,7 +313,7 @@ export function Reports() {
         ))}
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard label="Receitas cadastradas" value={counts.recipes} />
         <StatCard label="Ingredientes" value={counts.ingredients} />
         <StatCard label="Itens p/ comprar" value={counts.toBuy} valueClassName="text-amber-500" />

@@ -136,7 +136,7 @@ export function Pdv() {
   }
 
   return (
-    <div className="grid grid-cols-[1fr_360px] gap-6 h-[calc(100vh-4rem)]">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:h-[calc(100vh-4rem)]">
       <div>
         <h1 className="text-2xl mb-4">PDV</h1>
         <input
@@ -165,7 +165,7 @@ export function Pdv() {
         {filtered.length === 0 ? (
           <p className="text-muted text-sm">Nenhum prato encontrado.</p>
         ) : (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {filtered.map((recipe) => (
               <button
                 key={recipe.id}

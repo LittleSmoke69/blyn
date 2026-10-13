@@ -90,7 +90,7 @@ export function AdminOverview() {
       <PageHeader title="Visão geral" subtitle="Painel da equipe Blyn" icon={LayoutDashboard} />
       <ErrorBanner message={error} />
 
-      <div className="grid grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 mb-6">
         <StatCard label="Leads novos (7 dias)" value={show(stats.newThisWeek)} valueClassName="text-blue-700" />
         <StatCard label="Leads em negociação" value={show(stats.open)} />
         <StatCard label="Taxa de conversão" value={show(formatPercent(stats.conversion))} valueClassName="text-green-dark" />
@@ -102,7 +102,7 @@ export function AdminOverview() {
         />
       </div>
 
-      <div className="grid grid-cols-[2fr_1fr] gap-4 mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 mb-4">
         <div className="bg-card border border-border rounded-2xl p-6">
           <h3 className="text-sm font-semibold text-muted mb-4">Leads recebidos · últimos 30 dias</h3>
           <ResponsiveContainer width="100%" height={240}>
@@ -134,7 +134,7 @@ export function AdminOverview() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-card border border-border rounded-2xl p-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-muted">Leads novos sem responsável</h3>
@@ -146,7 +146,7 @@ export function AdminOverview() {
             <ul className="divide-y divide-border">
               {unassigned.map((l) => (
                 <li key={l.id}>
-                  <Link to={`/admin/crm?lead=${l.id}`} className="flex justify-between py-2.5 text-sm hover:text-green-dark">
+                  <Link to={`/admin/crm?lead=${l.id}`} className="flex justify-between gap-3 py-2.5 text-sm hover:text-green-dark min-w-0">
                     <span>
                       <strong>{l.name}</strong> {l.business_name && <span className="text-muted">· {l.business_name}</span>}
                     </span>
@@ -168,7 +168,7 @@ export function AdminOverview() {
           ) : (
             <ul className="divide-y divide-border">
               {stats.trialsEnding.map((a) => (
-                <li key={a.user_id} className="flex justify-between py-2.5 text-sm">
+                <li key={a.user_id} className="flex justify-between gap-3 py-2.5 text-sm min-w-0">
                   <span>
                     <strong>{a.restaurant_name}</strong> <span className="text-muted">· {a.email}</span>
                   </span>

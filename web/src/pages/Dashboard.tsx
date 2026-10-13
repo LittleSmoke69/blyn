@@ -112,7 +112,7 @@ export function Dashboard() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-6">
         <h1 className="text-2xl">Dashboard</h1>
         <span className="rounded-full bg-green/10 text-green-dark text-xs font-semibold px-3 py-1">
           Últimos 7 dias
@@ -125,7 +125,7 @@ export function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Receita total" value={formatBRL(receitaTotal)} loading={loading} />
         <KpiCard label="Despesas" value={formatBRL(despesaTotal)} loading={loading} />
         <KpiCard
@@ -137,7 +137,7 @@ export function Dashboard() {
         <KpiCard label="Ticket médio" value={formatBRL(ticketMedio)} loading={loading} />
       </div>
 
-      <div className="grid grid-cols-[2fr_1fr] gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
         <div className="bg-card border border-border rounded-2xl p-6">
           <h3 className="text-sm font-semibold text-muted mb-4">Receitas vs Despesas · últimos 7 dias</h3>
           <ResponsiveContainer width="100%" height={260}>

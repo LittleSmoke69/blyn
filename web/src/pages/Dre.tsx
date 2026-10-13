@@ -133,7 +133,7 @@ export function Dre() {
 
       <ErrorBanner message={error} />
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <div className="bg-card border border-border rounded-2xl p-5">
           <p className="text-xs text-muted flex items-center gap-1.5 mb-2">
             <TrendingUp className="h-4 w-4 text-green" /> Receita Bruta

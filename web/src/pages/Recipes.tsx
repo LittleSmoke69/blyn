@@ -237,7 +237,7 @@ export function Recipes() {
       ) : filtered.length === 0 ? (
         <p className="text-muted text-sm">Nenhuma receita encontrada.</p>
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((recipe) => {
             const cost = recipeCost(recipe);
             const price = Number(recipe.selling_price);
@@ -288,7 +288,7 @@ export function Recipes() {
       {showForm && (
         <Modal title={editing ? "Editar ficha técnica" : "Nova ficha técnica"} onClose={() => setShowForm(false)} wide>
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <Field label="Nome" className="col-span-2">
                 <input required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
               </Field>
@@ -299,7 +299,7 @@ export function Recipes() {
                   ))}
                 </select>
               </Field>
-              <Field label="Descrição" className="col-span-4">
+              <Field label="Descrição" className="col-span-full">
                 <textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} />
               </Field>
               <Field label="Preparo (min)">
@@ -335,7 +335,7 @@ export function Recipes() {
                         ? ingredientLineCost(Number(line.quantity), Number(ing.cost_per_unit), Number(ing.correction_factor))
                         : 0;
                     return (
-                      <div key={idx} className="grid grid-cols-[1fr_140px_110px_32px] gap-2 items-center">
+                      <div key={idx} className="grid grid-cols-[1fr_84px_72px_28px] sm:grid-cols-[1fr_140px_110px_32px] gap-2 items-center">
                         <select
                           value={line.ingredient_id}
                           onChange={(e) => setLines((ls) => ls.map((l, i) => (i === idx ? { ...l, ingredient_id: e.target.value } : l)))}

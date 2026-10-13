@@ -85,7 +85,7 @@ export function AdminTasks() {
 
       <ErrorBanner message={error} />
 
-      <form onSubmit={add} className="bg-card border border-border rounded-2xl p-4 mb-5 grid grid-cols-[1fr_160px_200px_auto] gap-2">
+      <form onSubmit={add} className="bg-card border border-border rounded-2xl p-4 mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_160px_200px_auto] gap-2">
         <input placeholder="Nova tarefa..." value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
         <input type="date" value={due} onChange={(e) => setDue(e.target.value)} className={inputClass} />
         <select value={assignee} onChange={(e) => setAssignee(e.target.value)} className={inputClass}>

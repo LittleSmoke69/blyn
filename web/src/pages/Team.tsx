@@ -186,8 +186,8 @@ export function Team() {
           }
         />
       ) : (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-card border border-border rounded-2xl overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-bg text-muted text-xs uppercase">
               <tr>
                 <th className="text-left px-5 py-3 font-medium">Nome</th>
@@ -237,7 +237,7 @@ export function Team() {
       {showForm && (
         <Modal title={editing ? `Editar ${editing.name}` : "Novo membro"} onClose={() => setShowForm(false)} wide>
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="Nome">
                 <input required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
               </Field>
@@ -272,7 +272,7 @@ export function Team() {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-1 border border-border rounded-xl p-4 max-h-80 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 border border-border rounded-xl p-4 max-h-80 overflow-y-auto">
                 {PERMISSION_GROUPS.map((g) => (
                   <div key={g.screen} className="flex items-center justify-between py-1.5 border-b border-border/60 last:border-0">
                     <span className="text-sm">{g.screen}</span>

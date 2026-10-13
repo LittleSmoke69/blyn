@@ -92,7 +92,7 @@ export function DigitalMenu() {
       <ErrorBanner message={error} />
 
       <div className="grid lg:grid-cols-[1.1fr_1fr] gap-6 mb-6">
-        <div className="bg-card border border-border rounded-2xl p-8 text-center">
+        <div className="min-w-0 bg-card border border-border rounded-2xl p-5 sm:p-8 text-center">
           <div className="mx-auto h-48 w-48 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-white">
             {qr ? <img src={qr} alt="QR Code do cardápio" className="h-full w-full" /> : <span className="text-muted text-sm">{loading ? "Gerando..." : "—"}</span>}
           </div>
@@ -116,7 +116,7 @@ export function DigitalMenu() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <div className="bg-card border border-border rounded-2xl p-6">
             <h3 className="text-base mb-4">Estatísticas do Cardápio</h3>
             <div className="grid grid-cols-2 gap-3">

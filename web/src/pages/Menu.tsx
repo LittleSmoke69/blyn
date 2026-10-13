@@ -149,7 +149,7 @@ export function Menu() {
 
       <ErrorBanner message={error} />
 
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-md">
           <Search className="h-4 w-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
           <input

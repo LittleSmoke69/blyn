@@ -193,7 +193,7 @@ export function AdminForms() {
         subtitle="Perguntas e textos do formulário “Agendar demonstração” da hero section"
         icon={FormInput}
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <a href={LANDING_URL} target="_blank" rel="noreferrer" className={secondaryButton}>
               <ExternalLink className="h-4 w-4" /> Ver site
             </a>
@@ -210,14 +210,14 @@ export function AdminForms() {
       <ErrorBanner message={error} />
       {message && <div className="mb-6 rounded-xl border border-green/30 bg-green/5 text-green-dark text-sm p-4">{message}</div>}
 
-      <div className="grid grid-cols-[1fr_420px] gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6 items-start">
         <div className="space-y-6">
-          <section className="bg-card border border-border rounded-2xl p-5 grid grid-cols-2 gap-3">
-            <h3 className="col-span-2 text-sm uppercase tracking-wide text-muted">Textos</h3>
-            <Field label="Título" className="col-span-2">
+          <section className="bg-card border border-border rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <h3 className="col-span-full text-sm uppercase tracking-wide text-muted">Textos</h3>
+            <Field label="Título" className="col-span-full">
               <input value={form.title} onChange={(e) => patchForm({ title: e.target.value })} className={inputClass} />
             </Field>
-            <Field label="Subtítulo" className="col-span-2">
+            <Field label="Subtítulo" className="col-span-full">
               <textarea rows={2} value={form.subtitle ?? ""} onChange={(e) => patchForm({ subtitle: e.target.value })} className={inputClass} />
             </Field>
             <Field label="Texto do botão">
@@ -236,7 +236,7 @@ export function AdminForms() {
               </button>
             </div>
 
-            <div className="grid grid-cols-[260px_1fr] gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-4">
               <ul className="space-y-1">
                 {fields.map((f, i) => (
                   <li key={`${f.key}-${i}`}>
@@ -263,8 +263,8 @@ export function AdminForms() {
               </ul>
 
               {current && (
-                <div className="border border-border rounded-xl p-4 grid grid-cols-2 gap-3 content-start">
-                  <Field label="Pergunta (rótulo)" className="col-span-2">
+                <div className="border border-border rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start">
+                  <Field label="Pergunta (rótulo)" className="col-span-full">
                     <input
                       value={current.label}
                       onChange={(e) => {
@@ -280,7 +280,7 @@ export function AdminForms() {
                       className={inputClass}
                     />
                   </Field>
-                  <Field label="Texto dentro do campo (placeholder)" className="col-span-2">
+                  <Field label="Texto dentro do campo (placeholder)" className="col-span-full">
                     <input value={current.placeholder} onChange={(e) => patchField(selected, { placeholder: e.target.value })} className={inputClass} />
                   </Field>
                   <Field label="Tipo de resposta">
@@ -317,7 +317,7 @@ export function AdminForms() {
                   </label>
 
                   {current.type === "select" && (
-                    <Field label="Opções (uma por linha)" className="col-span-2">
+                    <Field label="Opções (uma por linha)" className="col-span-full">
                       <textarea
                         rows={6}
                         value={(current.options ?? []).join("\n")}
@@ -327,7 +327,7 @@ export function AdminForms() {
                     </Field>
                   )}
 
-                  <div className="col-span-2 flex items-center justify-between pt-2 border-t border-border">
+                  <div className="col-span-full flex items-center justify-between pt-2 border-t border-border">
                     <p className="text-xs text-muted">
                       {current.system
                         ? "Campo do sistema: pode ser renomeado, mas não removido."

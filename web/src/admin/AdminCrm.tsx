@@ -408,8 +408,8 @@ function NewLeadModal({
 
   return (
     <Modal title="Novo lead" onClose={onClose}>
-      <form onSubmit={submit} className="grid grid-cols-2 gap-3">
-        <Field label="Nome" className="col-span-2">
+      <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field label="Nome" className="col-span-full">
           <input required value={form.name} onChange={set("name")} className={inputClass} />
         </Field>
         <Field label="WhatsApp">
@@ -434,7 +434,7 @@ function NewLeadModal({
         <Field label="Valor mensal estimado (R$)">
           <input type="number" step="0.01" min="0" value={form.estimated_value} onChange={set("estimated_value")} className={inputClass} />
         </Field>
-        <Field label="Responsável" className="col-span-2">
+        <Field label="Responsável" className="col-span-full">
           <select value={form.assigned_to} onChange={set("assigned_to")} className={inputClass}>
             <option value="">Sem responsável</option>
             {team.map((t) => (
@@ -442,8 +442,8 @@ function NewLeadModal({
             ))}
           </select>
         </Field>
-        {error && <p className="col-span-2 text-sm text-red">{error}</p>}
-        <div className="col-span-2 flex justify-end gap-2 pt-2">
+        {error && <p className="col-span-full text-sm text-red">{error}</p>}
+        <div className="col-span-full flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className={secondaryButton}>Cancelar</button>
           <button type="submit" disabled={saving} className={primaryButton}>{saving ? "Salvando..." : "Criar lead"}</button>
         </div>

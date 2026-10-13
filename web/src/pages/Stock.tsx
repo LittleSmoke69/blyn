@@ -75,8 +75,8 @@ export function Stock() {
     <div>
       <h1 className="text-2xl mb-6">Estoque</h1>
 
-      <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-5 mb-6 grid grid-cols-5 gap-3 items-end">
-        <div className="col-span-2">
+      <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-5 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+        <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-muted mb-1">Ingrediente</label>
           <select
             value={ingredientId}
@@ -126,7 +126,7 @@ export function Stock() {
             />
           </div>
         )}
-        <div className="col-span-5">
+        <div className="col-span-full">
           <input
             type="text"
             placeholder="Observações (opcional)"
@@ -135,7 +135,7 @@ export function Stock() {
             className="w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
         </div>
-        <div className="col-span-5 flex items-center gap-3">
+        <div className="col-span-full flex items-center gap-3">
           <button
             type="submit"
             disabled={submitting}
@@ -149,8 +149,8 @@ export function Stock() {
         </div>
       </form>
 
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-x-auto">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-bg text-muted text-xs uppercase">
             <tr>
               <th className="text-left px-5 py-3 font-medium">Ingrediente</th>

@@ -239,7 +239,7 @@ export function LeadDrawer({
                 <section className="bg-card border border-border rounded-2xl p-5 text-sm space-y-2">
                   <h3 className="text-sm uppercase tracking-wide text-muted">Respostas do formulário</h3>
                   {lead.answers?.length ? (
-                    <dl className="grid grid-cols-[minmax(140px,auto)_1fr] gap-x-4 gap-y-1.5">
+                    <dl className="grid grid-cols-1 sm:grid-cols-[minmax(140px,auto)_1fr] gap-x-4 gap-y-1.5">
                       {lead.answers.map((a) => (
                         <div key={a.key} className="contents">
                           <dt className="text-muted">{a.label}</dt>
@@ -259,8 +259,8 @@ export function LeadDrawer({
                 </section>
               )}
 
-              <form onSubmit={saveDetails} className="bg-card border border-border rounded-2xl p-5 grid grid-cols-2 gap-3">
-                <h3 className="col-span-2 text-sm uppercase tracking-wide text-muted">Dados do lead</h3>
+              <form onSubmit={saveDetails} className="bg-card border border-border rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <h3 className="col-span-full text-sm uppercase tracking-wide text-muted">Dados do lead</h3>
                 <Field label="Nome">
                   <input required value={draft.name} onChange={set("name")} className={inputClass} />
                 </Field>
@@ -290,7 +290,7 @@ export function LeadDrawer({
                 <Field label="Próximo follow-up">
                   <input type="date" value={draft.next_follow_up ?? ""} onChange={set("next_follow_up")} className={inputClass} />
                 </Field>
-                <div className="col-span-2 flex justify-between items-center pt-1">
+                <div className="col-span-full flex justify-between items-center pt-1">
                   <button type="button" onClick={deleteLead} className="text-sm text-red hover:underline flex items-center gap-1">
                     <Trash2 className="h-4 w-4" /> Excluir lead
                   </button>

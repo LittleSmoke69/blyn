@@ -110,7 +110,7 @@ export function OnlineOrders() {
           Nenhum pedido ainda. Novos pedidos do cardápio digital aparecem aqui em tempo real.
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {orders.map((order) => (
             <div key={order.id} className="bg-card border border-border rounded-2xl p-5">
               <div className="flex items-center justify-between mb-3">

@@ -101,7 +101,7 @@ export function Financial() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl">Financeiro</h1>
         <div className="flex flex-wrap gap-2">
         {scannerEnabled && can("financial.manage") && (
@@ -199,7 +199,7 @@ export function Financial() {
             <label className="block text-xs font-medium text-muted mb-1">Data</label>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm" />
           </div>
-          <div className="col-span-5">
+          <div className="col-span-full">
             <input
               type="text"
               placeholder="Descrição (opcional)"
@@ -208,7 +208,7 @@ export function Financial() {
               className="w-full rounded-lg border border-border px-3 py-2 text-sm"
             />
           </div>
-          <div className="col-span-5 flex items-center gap-3">
+          <div className="col-span-full flex items-center gap-3">
             <button type="submit" disabled={submitting} className="rounded-lg bg-green text-white font-semibold px-5 py-2.5 text-sm hover:bg-green-dark transition-colors disabled:opacity-50">
               {submitting ? "Salvando..." : "Salvar lançamento"}
             </button>
@@ -235,8 +235,8 @@ export function Financial() {
         ))}
       </div>
 
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-x-auto">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-bg text-muted text-xs uppercase">
             <tr>
               <th className="text-left px-5 py-3 font-medium">Data</th>

@@ -194,8 +194,8 @@ export function Settings() {
       <div className="space-y-6">
         {can("settings.view") && (
           <Section icon={Building2} title="Informações do Restaurante" subtitle="Estas informações aparecerão no cardápio digital">
-            <form onSubmit={handleSave} className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 flex items-center gap-4">
+            <form onSubmit={handleSave} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="col-span-full flex items-center gap-4">
                 <div className="h-16 w-16 rounded-2xl bg-bg border border-border overflow-hidden flex items-center justify-center">
                   {logoUrl ? <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" /> : <Building2 className="h-6 w-6 text-muted" />}
                 </div>
@@ -218,7 +218,7 @@ export function Settings() {
               <Field label="Telefone">
                 <input disabled={!canManage} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" className={inputClass} />
               </Field>
-              <Field label="Endereço" className="col-span-2">
+              <Field label="Endereço" className="col-span-full">
                 <input disabled={!canManage} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rua, número - Cidade, UF" className={inputClass} />
               </Field>
               <Field label="Horário de funcionamento">
@@ -227,7 +227,7 @@ export function Settings() {
               <Field label="Email de contato">
                 <input type="email" disabled={!canManage} value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
               </Field>
-              <div className="col-span-2 flex items-center justify-end gap-3">
+              <div className="col-span-full flex items-center justify-end gap-3">
                 {message && <span className={`text-sm ${message.type === "ok" ? "text-green-dark" : "text-red"}`}>{message.text}</span>}
                 {canManage && (
                   <button type="submit" disabled={saving} className={primaryButton}>

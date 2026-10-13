@@ -171,7 +171,7 @@ function PlanModal({ plan, onClose, onDone }: { plan: Plan | null; onClose: () =
             ))}
           </div>
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Validade (dias)">
             <input required inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value)} className={inputClass} />
           </Field>

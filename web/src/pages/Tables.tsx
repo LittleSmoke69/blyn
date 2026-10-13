@@ -254,7 +254,7 @@ export function Tables() {
 
       <ErrorBanner message={error} />
 
-      <div className="grid grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
         <StatCard label="Total" value={stats.total} />
         <StatCard label="Disponíveis" value={stats.available} valueClassName="text-green-dark" />
         <StatCard label="Ocupadas" value={stats.occupied} valueClassName="text-red" />
@@ -277,7 +277,7 @@ export function Tables() {
           }
         />
       ) : (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {tables.map((table) => {
             const order = orderByTable.get(table.id);
             const ShapeIcon = table.shape === "round" ? Circle : Square;
@@ -325,8 +325,8 @@ export function Tables() {
 
       {showForm && (
         <Modal title={editing ? "Editar mesa" : "Nova mesa"} onClose={() => setShowForm(false)}>
-          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
-            <Field label="Nome" className="col-span-2">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Nome" className="col-span-full">
               <input required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
             </Field>
             <Field label="Capacidade (1 a 20)">
@@ -338,8 +338,8 @@ export function Tables() {
                 <option value="round">Redonda</option>
               </select>
             </Field>
-            {formError && <p className="col-span-2 text-sm text-red">{formError}</p>}
-            <div className="col-span-2 flex justify-end gap-2 pt-2">
+            {formError && <p className="col-span-full text-sm text-red">{formError}</p>}
+            <div className="col-span-full flex justify-end gap-2 pt-2">
               <button type="button" onClick={() => setShowForm(false)} className={secondaryButton}>Cancelar</button>
               <button type="submit" disabled={saving} className={primaryButton}>{saving ? "Salvando..." : "Salvar"}</button>
             </div>

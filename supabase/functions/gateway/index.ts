@@ -68,7 +68,11 @@ Deno.serve(async (req) => {
   // já estiver logado, o Authorization dele é preservado — é o que o RLS usa
   // pra resolver auth.uid() e aplicar as policies normalmente.
   forwardHeaders.set("apikey", ANON_KEY);
-  if (!forwardHeaders.has("authorization")) {
+  // Sem sessão, o supabase-js manda "Bearer <a chave placeholder do front>" —
+  // não é JWT e o PostgREST recusaria (401 PGRST301), derrubando o cardápio
+  // público. Qualquer Authorization que não seja um JWT vira o anon.
+  const auth = forwardHeaders.get("authorization") ?? "";
+  if (!/^Bearer [\w-]+\.[\w-]+\.[\w-]+$/.test(auth)) {
     forwardHeaders.set("authorization", `Bearer ${ANON_KEY}`);
   }
 
