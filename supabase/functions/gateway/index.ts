@@ -72,10 +72,12 @@ Deno.serve(async (req) => {
     forwardHeaders.set("authorization", `Bearer ${ANON_KEY}`);
   }
 
+  // Corpo repassado em streaming (não bufferiza): upload de vídeo do cardápio
+  // chega a 50 MB e o worker tem limite de memória de 150 MB.
   const upstreamResponse = await fetch(targetUrl, {
     method: req.method,
     headers: forwardHeaders,
-    body: ["GET", "HEAD"].includes(req.method) ? undefined : await req.arrayBuffer(),
+    body: ["GET", "HEAD"].includes(req.method) ? undefined : req.body,
   });
 
   const responseHeaders = new Headers(corsHeaders);

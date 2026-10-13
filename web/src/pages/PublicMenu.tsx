@@ -1,8 +1,10 @@
-import { CheckCircle2, Clock, ImageOff, MapPin, Minus, Phone, Plus, ShoppingBag, X } from "lucide-react";
+import { CheckCircle2, Clock, ImageOff, Images, MapPin, Minus, Phone, Play, Plus, ShoppingBag, X } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
+import { MediaViewer } from "../components/MediaViewer";
 import { Field, inputClass, primaryButton } from "../components/ui";
 import { RECIPE_CATEGORIES, formatBRL } from "../lib/format";
+import { MEDIA_SELECT, type RecipeMedia } from "../lib/media";
 import { publicSupabase } from "../lib/supabase";
 
 interface Restaurant {
@@ -36,6 +38,8 @@ export function PublicMenu() {
   const { slug } = useParams();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [dishes, setDishes] = useState<Dish[]>([]);
+  const [media, setMedia] = useState<Map<string, RecipeMedia[]>>(new Map());
+  const [viewing, setViewing] = useState<Dish | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [category, setCategory] = useState<string>("Todos");
@@ -79,6 +83,20 @@ export function PublicMenu() {
       .eq("is_active", true)
       .order("name");
     setDishes(data ?? []);
+    // Galeria (fotos e vídeos) só dos pratos deste restaurante; a policy de anon
+    // já limita a pratos ativos.
+    const ids = (data ?? []).map((d) => d.id);
+    if (ids.length > 0) {
+      const { data: rows } = await publicSupabase
+        .from("recipe_media")
+        .select(MEDIA_SELECT)
+        .in("recipe_id", ids)
+        .order("position")
+        .order("created_at");
+      const byRecipe = new Map<string, RecipeMedia[]>();
+      for (const m of (rows as RecipeMedia[]) ?? []) byRecipe.set(m.recipe_id, [...(byRecipe.get(m.recipe_id) ?? []), m]);
+      setMedia(byRecipe);
+    }
     setLoading(false);
   }
 
@@ -216,13 +234,36 @@ export function PublicMenu() {
               <div className="space-y-3">
                 {g.items.map((dish) => (
                   <div key={dish.id} className="bg-card border border-border rounded-2xl p-3 flex gap-3">
-                    <div className="h-24 w-24 rounded-xl bg-bg overflow-hidden flex items-center justify-center shrink-0">
-                      {dish.image_url ? (
-                        <img src={dish.image_url} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <ImageOff className="h-6 w-6 text-muted/50" />
-                      )}
-                    </div>
+                    {(() => {
+                      const dishMedia = media.get(dish.id) ?? [];
+                      const hasVideo = dishMedia.some((m) => m.kind === "video");
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => dishMedia.length > 0 && setViewing(dish)}
+                          className="relative h-24 w-24 rounded-xl bg-bg overflow-hidden flex items-center justify-center shrink-0"
+                          aria-label={dishMedia.length > 0 ? `Ver fotos e vídeos de ${dish.name}` : dish.name}
+                        >
+                          {dish.image_url ? (
+                            <img src={dish.image_url} alt="" className="h-full w-full object-cover" />
+                          ) : dishMedia[0]?.kind === "video" ? (
+                            <video src={`${dishMedia[0].url}#t=0.5`} preload="metadata" muted playsInline className="h-full w-full object-cover" />
+                          ) : (
+                            <ImageOff className="h-6 w-6 text-muted/50" />
+                          )}
+                          {hasVideo && (
+                            <span className="absolute inset-0 flex items-center justify-center">
+                              <span className="rounded-full bg-black/60 p-1.5 text-white"><Play className="h-4 w-4" /></span>
+                            </span>
+                          )}
+                          {dishMedia.length > 1 && (
+                            <span className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 text-[10px] font-semibold text-white">
+                              <Images className="h-3 w-3" /> {dishMedia.length}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })()}
                     <div className="flex-1 min-w-0 flex flex-col">
                       <p className="font-semibold">{dish.name}</p>
                       <p className="text-sm text-muted line-clamp-2 flex-1">{dish.description ?? ""}</p>
@@ -253,6 +294,8 @@ export function PublicMenu() {
         )}
         <p className="text-center text-xs text-muted pt-4">Cardápio digital por Blyn</p>
       </main>
+
+      {viewing && <MediaViewer title={viewing.name} media={media.get(viewing.id) ?? []} onClose={() => setViewing(null)} />}
 
       {cartCount > 0 && !checkout && (
         <div className="fixed bottom-0 inset-x-0 p-4">

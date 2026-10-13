@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Field, Modal, PageHeader, inputClass, primaryButton, secondaryButton } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { formatDate, formatDateTime } from "../lib/format";
+import { storageUploadBody } from "../lib/media";
 import { supabase } from "../lib/supabase";
 
 interface Subscription {
@@ -142,7 +143,10 @@ export function Settings() {
     const ext = file.name.split(".").pop()?.toLowerCase() || "png";
     // Policy do bucket: o primeiro diretório do path precisa ser o uid de quem envia.
     const path = `${ownerId}/logo.${ext}`;
-    const { error } = await supabase.storage.from("restaurant-logos").upload(path, file, { upsert: true, contentType: file.type });
+    // FormData com campo nomeado: o multipart padrão do supabase-js (campo vazio) é recusado pelo WAF.
+    const { error } = await supabase.storage
+      .from("restaurant-logos")
+      .upload(path, storageUploadBody(file, `logo.${ext}`, "3600"), { upsert: true, contentType: file.type });
     if (error) {
       setMessage({ type: "err", text: error.message });
       setUploading(false);

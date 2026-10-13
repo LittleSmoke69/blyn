@@ -1,9 +1,11 @@
-import { ChefHat, Eye, EyeOff, ImageOff, Pencil, Search } from "lucide-react";
+import { ChefHat, Eye, EyeOff, Film, ImageOff, Images, Pencil, Search } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { MediaManager } from "../components/MediaManager";
 import { EmptyState, ErrorBanner, Field, Modal, PageHeader, PillTabs, inputClass, primaryButton, secondaryButton } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { RECIPE_CATEGORIES, formatBRL } from "../lib/format";
+import type { RecipeMedia } from "../lib/media";
 import { supabase } from "../lib/supabase";
 
 interface MenuItem {
@@ -19,7 +21,11 @@ interface MenuItem {
 type StatusFilter = "all" | "active" | "inactive";
 
 export function Menu() {
-  const { can } = useAuth();
+  const { can, ownerId } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Quantidade de fotos/vídeos por prato (selos nos cards).
+  const [mediaCount, setMediaCount] = useState<Map<string, { images: number; videos: number }>>(new Map());
+  const [editingMedia, setEditingMedia] = useState<RecipeMedia[]>([]);
   const canEdit = can("menu.edit") || can("recipes.manage");
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +53,23 @@ export function Menu() {
       .order("name");
     if (error) setError(error.message);
     setItems(data ?? []);
+    const { data: media } = await supabase.from("recipe_media").select("recipe_id, kind");
+    const counts = new Map<string, { images: number; videos: number }>();
+    for (const m of media ?? []) {
+      const c = counts.get(m.recipe_id) ?? { images: 0, videos: 0 };
+      if (m.kind === "video") c.videos++;
+      else c.images++;
+      counts.set(m.recipe_id, c);
+    }
+    setMediaCount(counts);
     setLoading(false);
+    // Atalho vindo do Cardápio Digital: /menu?editar=<id> abre o prato direto.
+    const target = searchParams.get("editar");
+    if (target) {
+      const item = (data ?? []).find((i) => i.id === target);
+      if (item) openEdit(item);
+      setSearchParams({}, { replace: true });
+    }
   }
 
   const filtered = items.filter(
@@ -78,7 +100,9 @@ export function Menu() {
     setName(item.name);
     setCategory(item.category);
     setDescription(item.description ?? "");
-    setImageUrl(item.image_url ?? "");
+    // Link externo só aparece no campo se não for uma foto da galeria.
+    setImageUrl(item.image_url && !item.image_url.includes("/menu-media/") ? item.image_url : "");
+    setEditingMedia([]);
     setFormError(null);
   }
 
@@ -86,13 +110,16 @@ export function Menu() {
     e.preventDefault();
     if (!editing) return;
     setSaving(true);
+    // Com foto na galeria, a capa é do banco (primeira foto); o link externo só
+    // vale para prato sem fotos.
+    const hasGalleryImage = editingMedia.some((m) => m.kind === "image");
     const { error } = await supabase
       .from("recipes")
       .update({
         name: name.trim(),
         category,
         description: description.trim() || null,
-        image_url: imageUrl.trim() || null,
+        ...(hasGalleryImage ? {} : { image_url: imageUrl.trim() || null }),
       })
       .eq("id", editing.id);
     setSaving(false);
@@ -166,17 +193,27 @@ export function Menu() {
           {grouped.map((group) => (
             <section key={group.category}>
               <h2 className="text-sm uppercase tracking-wide text-muted mb-3">{group.category}</h2>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {group.items.map((item) => (
                   <div
                     key={item.id}
                     className={`bg-card border border-border rounded-2xl overflow-hidden flex flex-col ${item.is_active ? "" : "opacity-60"}`}
                   >
-                    <div className="h-36 bg-bg flex items-center justify-center">
+                    <div className="relative h-36 bg-bg flex items-center justify-center">
                       {item.image_url ? (
                         <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
                       ) : (
                         <ImageOff className="h-8 w-8 text-muted/50" />
+                      )}
+                      {mediaCount.get(item.id) && (
+                        <span className="absolute right-2 top-2 flex items-center gap-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white">
+                          {mediaCount.get(item.id)!.images > 0 && (
+                            <span className="flex items-center gap-1"><Images className="h-3 w-3" />{mediaCount.get(item.id)!.images}</span>
+                          )}
+                          {mediaCount.get(item.id)!.videos > 0 && (
+                            <span className="flex items-center gap-1"><Film className="h-3 w-3" />{mediaCount.get(item.id)!.videos}</span>
+                          )}
+                        </span>
                       )}
                     </div>
                     <div className="p-4 flex flex-col flex-1">
@@ -210,7 +247,7 @@ export function Menu() {
       )}
 
       {editing && (
-        <Modal title="Editar item do cardápio" onClose={() => setEditing(null)}>
+        <Modal title="Editar item do cardápio" onClose={() => { setEditing(null); load(); }} wide>
           <form onSubmit={handleSubmit} className="space-y-3">
             <Field label="Nome">
               <input required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
@@ -225,15 +262,22 @@ export function Menu() {
             <Field label="Descrição (aparece no cardápio digital)">
               <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} />
             </Field>
-            <Field label="URL da imagem">
-              <input type="url" placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className={inputClass} />
-            </Field>
+            {ownerId && (
+              <div className="rounded-xl border border-border p-4">
+                <MediaManager recipeId={editing.id} ownerId={ownerId} recipeName={name || editing.name} onChange={setEditingMedia} />
+              </div>
+            )}
+            {!editingMedia.some((m) => m.kind === "image") && (
+              <Field label="Ou link de uma imagem externa (usado enquanto o prato não tiver fotos)">
+                <input type="url" placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className={inputClass} />
+              </Field>
+            )}
             <p className="text-xs text-muted">
               O preço ({formatBRL(Number(editing.selling_price))}) é calculado pela ficha técnica a partir do custo e da margem.
             </p>
             {formError && <p className="text-sm text-red">{formError}</p>}
             <div className="flex justify-end gap-2 pt-2">
-              <button type="button" onClick={() => setEditing(null)} className={secondaryButton}>Cancelar</button>
+              <button type="button" onClick={() => { setEditing(null); load(); }} className={secondaryButton}>Fechar</button>
               <button type="submit" disabled={saving} className={primaryButton}>{saving ? "Salvando..." : "Salvar"}</button>
             </div>
           </form>

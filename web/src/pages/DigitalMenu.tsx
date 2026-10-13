@@ -1,10 +1,12 @@
-import { Check, Copy, Download, Eye, ImageOff, Palette } from "lucide-react";
+import { Check, Copy, Download, Eye, Film, ImageOff, Images, Palette, Play } from "lucide-react";
 import QRCode from "qrcode";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { MediaViewer } from "../components/MediaViewer";
 import { ErrorBanner, PageHeader, primaryButton, secondaryButton } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { RECIPE_CATEGORIES, formatBRL } from "../lib/format";
+import { MEDIA_SELECT, type RecipeMedia } from "../lib/media";
 import { supabase } from "../lib/supabase";
 
 interface MenuItem {
@@ -28,20 +30,27 @@ export function DigitalMenu() {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [media, setMedia] = useState<Map<string, RecipeMedia[]>>(new Map());
+  const [viewing, setViewing] = useState<MenuItem | null>(null);
+  const canEditMedia = can("menu.edit") || can("recipes.manage");
 
   useEffect(() => {
     if (ownerId) load(ownerId);
   }, [ownerId]);
 
   async function load(owner: string) {
-    const [settingsRes, recipesRes] = await Promise.all([
+    const [settingsRes, recipesRes, mediaRes] = await Promise.all([
       supabase.from("restaurant_settings_public").select("slug").eq("user_id", owner).maybeSingle(),
       supabase
         .from("recipes")
         .select("id, name, category, description, selling_price, image_url")
         .eq("is_active", true)
         .order("name"),
+      supabase.from("recipe_media").select(MEDIA_SELECT).order("position").order("created_at"),
     ]);
+    const byRecipe = new Map<string, RecipeMedia[]>();
+    for (const m of (mediaRes.data as RecipeMedia[]) ?? []) byRecipe.set(m.recipe_id, [...(byRecipe.get(m.recipe_id) ?? []), m]);
+    setMedia(byRecipe);
     if (settingsRes.error) setError(settingsRes.error.message);
     const s = settingsRes.data?.slug ?? null;
     setSlug(s);
@@ -82,7 +91,7 @@ export function DigitalMenu() {
 
       <ErrorBanner message={error} />
 
-      <div className="grid grid-cols-[1.1fr_1fr] gap-6 mb-6">
+      <div className="grid lg:grid-cols-[1.1fr_1fr] gap-6 mb-6">
         <div className="bg-card border border-border rounded-2xl p-8 text-center">
           <div className="mx-auto h-48 w-48 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-white">
             {qr ? <img src={qr} alt="QR Code do cardápio" className="h-full w-full" /> : <span className="text-muted text-sm">{loading ? "Gerando..." : "—"}</span>}
@@ -119,6 +128,14 @@ export function DigitalMenu() {
                 <p className="text-2xl font-bold">{grouped.length}</p>
                 <p className="text-sm text-muted">Categorias</p>
               </div>
+              <div className="bg-bg rounded-xl p-4">
+                <p className="text-2xl font-bold">{[...media.values()].flat().filter((m) => m.kind === "image").length}</p>
+                <p className="text-sm text-muted">Fotos</p>
+              </div>
+              <div className="bg-bg rounded-xl p-4">
+                <p className="text-2xl font-bold">{[...media.values()].flat().filter((m) => m.kind === "video").length}</p>
+                <p className="text-sm text-muted">Vídeos</p>
+              </div>
             </div>
           </div>
 
@@ -153,31 +170,64 @@ export function DigitalMenu() {
             {grouped.map((g) => (
               <div key={g.category}>
                 <p className="text-xs uppercase tracking-wide text-muted font-semibold mb-2">{g.category}</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {g.items.map((item) => (
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {g.items.map((item) => {
+                    const itemMedia = media.get(item.id) ?? [];
+                    const videos = itemMedia.filter((m) => m.kind === "video").length;
+                    return (
                     <div key={item.id} className="flex gap-3 border border-border rounded-xl p-3">
-                      <div className="h-16 w-16 rounded-lg bg-bg overflow-hidden flex items-center justify-center shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => itemMedia.length > 0 && setViewing(item)}
+                        className="relative h-16 w-16 rounded-lg bg-bg overflow-hidden flex items-center justify-center shrink-0"
+                        aria-label="Ver fotos e vídeos"
+                      >
                         {item.image_url ? (
                           <img src={item.image_url} alt="" className="h-full w-full object-cover" />
+                        ) : itemMedia[0]?.kind === "video" ? (
+                          <video src={`${itemMedia[0].url}#t=0.5`} preload="metadata" muted playsInline className="h-full w-full object-cover" />
                         ) : (
                           <ImageOff className="h-5 w-5 text-muted/50" />
                         )}
-                      </div>
+                        {videos > 0 && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <span className="rounded-full bg-black/60 p-1 text-white"><Play className="h-3 w-3" /></span>
+                          </span>
+                        )}
+                      </button>
                       <div className="min-w-0 flex-1">
                         <div className="flex justify-between gap-2">
                           <p className="font-semibold text-sm truncate">{item.name}</p>
                           <p className="text-sm font-bold text-green-dark whitespace-nowrap">{formatBRL(Number(item.selling_price))}</p>
                         </div>
                         <p className="text-xs text-muted line-clamp-2">{item.description ?? ""}</p>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-muted">
+                          {itemMedia.length > 0 && (
+                            <span className="flex items-center gap-1">
+                              <Images className="h-3 w-3" /> {itemMedia.length - videos}
+                              <Film className="h-3 w-3 ml-1" /> {videos}
+                            </span>
+                          )}
+                          {canEditMedia && (
+                            <Link to={`/menu?editar=${item.id}`} className="font-semibold text-green-dark hover:underline">
+                              {itemMedia.length > 0 ? "Editar fotos e vídeos" : "Adicionar fotos e vídeos"}
+                            </Link>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {viewing && (
+        <MediaViewer title={viewing.name} media={media.get(viewing.id) ?? []} onClose={() => setViewing(null)} />
+      )}
     </div>
   );
 }
