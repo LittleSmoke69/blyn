@@ -10,7 +10,7 @@ import { STAGE_LABEL } from "./crm";
 import { ChannelPill, LeadOriginDetails } from "./LeadOrigin";
 import {
   addInsight, CHANNELS, channelGroup, channelLabel, emptyTotals, isPaidChannel, MARKETING_LEAD_SELECT, ratio,
-  type MarketingLead, type MetaAd, type MetaAdset, type MetaCampaign, type MetaInsight, type SessionSummary, type Totals,
+  SITE_EVENTS, type EventSummary, type MarketingLead, type MetaAd, type MetaAdset, type MetaCampaign, type MetaInsight, type SessionSummary, type Totals,
 } from "./marketing";
 import { MarketingSettings } from "./MarketingSettings";
 
@@ -24,6 +24,7 @@ const fmtMoney = (v: number | null) => (v === null ? "—" : formatBRL(v));
 export interface MarketingData {
   leads: MarketingLead[];
   sessions: SessionSummary[];
+  events: EventSummary[];
   campaigns: MetaCampaign[];
   adsets: MetaAdset[];
   ads: MetaAd[];
@@ -74,20 +75,22 @@ export function AdminMarketing() {
     setError(null);
     const sinceIso = range.since.toISOString();
     const sinceDay = localDateKey(range.since);
-    const [leadsRes, sessRes, campRes, adsetRes, adsRes, insRes, accRes] = await Promise.all([
+    const [leadsRes, sessRes, evRes, campRes, adsetRes, adsRes, insRes, accRes] = await Promise.all([
       supabase.from("crm_leads").select(MARKETING_LEAD_SELECT).gte("created_at", sinceIso).order("created_at", { ascending: false }).limit(5000),
       supabase.rpc("marketing_sessions_summary", { since: sinceIso, until: range.until.toISOString() }),
+      supabase.rpc("marketing_events_summary", { since: sinceIso, until: range.until.toISOString() }),
       supabase.from("meta_campaigns").select("id, name, status, effective_status, objective, daily_budget, lifetime_budget"),
       supabase.from("meta_adsets").select("id, campaign_id, name, effective_status, optimization_goal"),
       supabase.from("meta_ads").select("id, adset_id, campaign_id, name, effective_status, creative_name, title, body, call_to_action, link_url, image_url, thumbnail_url, video_id, permalink_url"),
       supabase.from("meta_insights_daily").select("ad_id, date, adset_id, campaign_id, spend, impressions, reach, clicks, link_clicks, landing_page_views, leads, conversations").gte("date", sinceDay).limit(20000),
       supabase.rpc("admin_list_accounts"),
     ]);
-    const firstError = [leadsRes, sessRes, campRes, adsetRes, adsRes, insRes].find((r) => r.error)?.error;
+    const firstError = [leadsRes, sessRes, evRes, campRes, adsetRes, adsRes, insRes].find((r) => r.error)?.error;
     if (firstError) setError(firstError.message);
     setData({
       leads: (leadsRes.data as MarketingLead[]) ?? [],
       sessions: ((sessRes.data as SessionSummary[]) ?? []).map((s) => ({ ...s, sessions: Number(s.sessions), visitors: Number(s.visitors) })),
+      events: ((evRes.data as EventSummary[]) ?? []).map((e) => ({ ...e, events: Number(e.events), visitors: Number(e.visitors) })),
       campaigns: (campRes.data as MetaCampaign[]) ?? [],
       adsets: (adsetRes.data as MetaAdset[]) ?? [],
       ads: (adsRes.data as MetaAd[]) ?? [],
@@ -383,6 +386,8 @@ function Overview({ data, since }: { data: MarketingData; since: Date }) {
         </Card>
       </div>
 
+      <EventsCard data={data} totalSessions={totalSessions} leadsCount={leads.filter((l) => l.source.startsWith("landing")).length} />
+
       <Card title="Funil comercial por canal" subtitle="Etapa atual no CRM dos leads criados no período">
         <Table
           headers={[{ label: "Canal" }, ...stageKeys.map((s) => ({ label: STAGE_LABEL[s], right: true })), { label: "Taxa de ganho", right: true }]}
@@ -400,6 +405,29 @@ function Overview({ data, since }: { data: MarketingData; since: Date }) {
         </p>
       )}
     </div>
+  );
+}
+
+function EventsCard({ data, totalSessions, leadsCount }: { data: MarketingData; totalSessions: number; leadsCount: number }) {
+  const byName = new Map<string, { events: number; visitors: number; paid: number }>();
+  for (const e of data.events) {
+    const r = byName.get(e.name) ?? { events: 0, visitors: 0, paid: 0 };
+    r.events += e.events;
+    r.visitors += e.visitors;
+    if (isPaidChannel(e.channel)) r.paid += e.events;
+    byName.set(e.name, r);
+  }
+  const rows = SITE_EVENTS.map((ev) => ({ ...ev, ...(byName.get(ev.name) ?? { events: 0, visitors: 0, paid: 0 }) }));
+  return (
+    <Card title="Eventos do site (Pixel)" subtitle="Engajamento na landing; visitantes únicos somados por dia">
+      <Table
+        headers={[{ label: "Evento" }, { label: "O que é" }, { label: "Disparos", right: true }, { label: "Visitantes", right: true }, { label: "% das visitas", right: true }, { label: "De anúncios", right: true }]}
+        rows={[
+          ...rows.map((r) => [<span key="n" className="font-mono text-xs">{r.name}</span>, r.label, fmtInt(r.events), fmtInt(r.visitors), fmtPct(ratio(r.visitors, totalSessions)), fmtInt(r.paid)]),
+          [<span key="n" className="font-mono text-xs">Lead</span>, "Envio do formulário", fmtInt(leadsCount), "—", fmtPct(ratio(leadsCount, totalSessions)), "—"],
+        ]}
+      />
+    </Card>
   );
 }
 

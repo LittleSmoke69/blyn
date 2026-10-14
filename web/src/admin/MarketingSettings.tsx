@@ -2,7 +2,7 @@ import { CheckCircle2, Copy, KeyRound, Link2, PlugZap, RefreshCw, Save, Send, XC
 import { useEffect, useState, type FormEvent } from "react";
 import { ErrorBanner, Field, inputClass, primaryButton, secondaryButton } from "../components/ui";
 import { formatDateTime } from "../lib/format";
-import { callMeta, META_URL_TEMPLATE, type MetaSettingsView } from "./marketing";
+import { callMeta, META_URL_TEMPLATE, SITE_EVENTS, type MetaSettingsView } from "./marketing";
 
 const SITE_URL = "https://blynassessoria.com.br/";
 
@@ -68,7 +68,7 @@ export function MarketingSettings({ onSynced }: { onSynced: () => void }) {
     }
   }
 
-  async function toggle(field: "capi_enabled" | "auto_sync", value: boolean) {
+  async function toggle(field: "capi_enabled" | "auto_sync" | "custom_events_enabled" | "capi_custom_events", value: boolean) {
     const data = await run(field, { action: "update", [field]: value }, () => "Configuração salva.");
     if (data) apply(data as unknown as MetaSettingsView);
   }
@@ -180,6 +180,11 @@ export function MarketingSettings({ onSynced }: { onSynced: () => void }) {
         </div>
       </div>
 
+      <PixelEvents s={s} busy={!!busy} onToggle={toggle} onSaveName={async (name) => {
+        const data = await run("event", { action: "update", lead_event_name: name }, () => `Evento de lead agora é “${name}”.`);
+        if (data) apply(data as unknown as MetaSettingsView);
+      }} />
+
       <section className="bg-card border border-border rounded-2xl p-6 space-y-3">
         <h3 className="text-lg">Parâmetros de URL dos anúncios da Meta</h3>
         <p className="text-sm text-muted">
@@ -238,6 +243,90 @@ function UtmBuilder() {
         <Field label="Termo (utm_term)"><input value={u.term} onChange={(e) => setU({ ...u, term: e.target.value })} className={inputClass} /></Field>
       </div>
       <CopyBox value={url} />
+    </section>
+  );
+}
+
+const LEAD_EVENT_OPTIONS = ["Lead", "CompleteRegistration", "Schedule", "SubmitApplication", "Contact"];
+
+function PixelEvents({ s, busy, onToggle, onSaveName }: {
+  s: MetaSettingsView;
+  busy: boolean;
+  onToggle: (field: "custom_events_enabled" | "capi_custom_events", value: boolean) => void;
+  onSaveName: (name: string) => void;
+}) {
+  const standard = LEAD_EVENT_OPTIONS.includes(s.lead_event_name);
+  const [mode, setMode] = useState(standard ? s.lead_event_name : "__custom");
+  const [custom, setCustom] = useState(standard ? "" : s.lead_event_name);
+  const name = mode === "__custom" ? custom.trim() : mode;
+
+  return (
+    <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
+      <div>
+        <h3 className="text-lg flex items-center gap-2"><Send className="h-5 w-5 text-green" /> Eventos do Pixel {s.pixel_id && <span className="text-sm font-normal text-muted">· {s.pixel_id}</span>}</h3>
+        <p className="text-sm text-muted mt-1">
+          Todo envio de formulário dispara o evento de lead no Pixel com <strong>correspondência avançada</strong> (e-mail, telefone, nome e id do visitante,
+          com hash) e, como parâmetros, todas as respostas do formulário, UTMs e ids de campanha/conjunto/anúncio. O mesmo evento (mesmo event_id) vai
+          pela Conversions API quando ela está ligada — a Meta conta uma vez só.
+        </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,260px)_minmax(0,260px)_auto] items-end">
+        <Field label="Evento de lead">
+          <select value={mode} onChange={(e) => setMode(e.target.value)} className={inputClass}>
+            {LEAD_EVENT_OPTIONS.map((o) => <option key={o} value={o}>{o}{o === "Lead" ? " (padrão)" : ""}</option>)}
+            <option value="__custom">Evento personalizado…</option>
+          </select>
+        </Field>
+        {mode === "__custom" ? (
+          <Field label="Nome do evento personalizado">
+            <input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="LeadDemonstracao" className={inputClass} />
+          </Field>
+        ) : <div className="hidden sm:block" />}
+        <button type="button" disabled={busy || !name || name === s.lead_event_name} onClick={() => onSaveName(name)} className={`${primaryButton} justify-self-start`}>
+          <Save className="h-4 w-4" /> Salvar evento
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={s.custom_events_enabled} disabled={busy} onChange={(e) => onToggle("custom_events_enabled", e.target.checked)} />
+          Disparar eventos de engajamento no Pixel
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={s.capi_custom_events} disabled={busy || !s.custom_events_enabled} onChange={(e) => onToggle("capi_custom_events", e.target.checked)} />
+          Também enviar os eventos de engajamento pela Conversions API {!s.capi_enabled && <span className="text-muted">(a Conversions API está desligada)</span>}
+        </label>
+      </div>
+
+      <div className="overflow-x-auto -mx-6 px-6">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-muted">
+              <th className="pb-2 pr-4 font-medium">Evento</th>
+              <th className="pb-2 pr-4 font-medium">Quando dispara</th>
+              <th className="pb-2 pr-4 font-medium">Tipo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-t border-border">
+              <td className="py-2 pr-4 font-mono text-xs">{s.lead_event_name}</td>
+              <td className="py-2 pr-4">Envio de formulário (hero e rodapé) — com todos os dados</td>
+              <td className="py-2 pr-4">{LEAD_EVENT_OPTIONS.includes(s.lead_event_name) ? "padrão" : "personalizado"}</td>
+            </tr>
+            {SITE_EVENTS.map((e) => (
+              <tr key={e.name} className={`border-t border-border ${s.custom_events_enabled ? "" : "opacity-50"}`}>
+                <td className="py-2 pr-4 font-mono text-xs">{e.name}</td>
+                <td className="py-2 pr-4">{e.label}</td>
+                <td className="py-2 pr-4">{e.kind}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-muted">
+        Para otimizar campanhas por um evento personalizado, crie uma <em>conversão personalizada</em> no Gerenciador de Eventos usando o nome dele.
+      </p>
     </section>
   );
 }

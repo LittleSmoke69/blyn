@@ -17,6 +17,9 @@ export interface MetaSettings {
   sync_days: number;
   auto_sync: boolean;
   cron_secret: string;
+  lead_event_name: string;
+  custom_events_enabled: boolean;
+  capi_custom_events: boolean;
   last_sync_at: string | null;
   last_sync_error: string | null;
 }
@@ -84,48 +87,60 @@ function normPhone(v: string) {
   return d.length <= 11 ? `55${d}` : d;
 }
 
-export interface CapiLead {
-  event_id: string;
-  event_source_url: string | null;
-  email: string | null;
-  phone: string | null;
-  name: string | null;
+export interface CapiUser {
+  email?: string | null;
+  phone?: string | null;
+  name?: string | null;
   ip: string | null;
   user_agent: string | null;
   fbp: string | null;
   fbc: string | null;
   external_id: string | null;
-  lead_source: string;
-  channel: string;
 }
 
-/** Envia o evento Lead pra Conversions API. Retorna o status pra gravar no lead. */
-export async function sendCapiLead(s: MetaSettings, lead: CapiLead): Promise<string> {
+export interface CapiEvent {
+  event_name: string;
+  event_id: string;
+  event_source_url: string | null;
+  user: CapiUser;
+  custom_data?: Record<string, unknown>;
+}
+
+async function userData(u: CapiUser) {
+  const [first, ...rest] = (u.name ?? "").trim().split(/\s+/);
+  const out: Record<string, unknown> = { country: [await sha256("br")] };
+  if (u.email) out.em = [await sha256(u.email.trim().toLowerCase())];
+  if (u.phone) out.ph = [await sha256(normPhone(u.phone))];
+  if (first) out.fn = [await sha256(normName(first))];
+  if (rest.length) out.ln = [await sha256(normName(rest[rest.length - 1]))];
+  if (u.external_id) out.external_id = [await sha256(u.external_id)];
+  if (u.ip) out.client_ip_address = u.ip;
+  if (u.user_agent) out.client_user_agent = u.user_agent;
+  if (u.fbp) out.fbp = u.fbp;
+  if (u.fbc) out.fbc = u.fbc;
+  return out;
+}
+
+/**
+ * Envia um evento (padrão ou personalizado) pra Conversions API. O event_id
+ * é o mesmo do fbq no navegador → a Meta deduplica. Retorna o status pra
+ * gravar (enviado | desligado | erro: ...).
+ */
+export async function sendCapiEvent(s: MetaSettings, ev: CapiEvent): Promise<string> {
   if (!s.capi_enabled) return "desligado";
   if (!s.access_token || !s.pixel_id) return "erro: pixel ou token não configurado";
 
-  const [first, ...rest] = (lead.name ?? "").trim().split(/\s+/);
-  const user_data: Record<string, unknown> = { country: [await sha256("br")] };
-  if (lead.email) user_data.em = [await sha256(lead.email.trim().toLowerCase())];
-  if (lead.phone) user_data.ph = [await sha256(normPhone(lead.phone))];
-  if (first) user_data.fn = [await sha256(normName(first))];
-  if (rest.length) user_data.ln = [await sha256(normName(rest[rest.length - 1]))];
-  if (lead.external_id) user_data.external_id = [await sha256(lead.external_id)];
-  if (lead.ip) user_data.client_ip_address = lead.ip;
-  if (lead.user_agent) user_data.client_user_agent = lead.user_agent;
-  if (lead.fbp) user_data.fbp = lead.fbp;
-  if (lead.fbc) user_data.fbc = lead.fbc;
-
+  const custom = Object.fromEntries(Object.entries(ev.custom_data ?? {}).filter(([, v]) => v !== null && v !== undefined && v !== ""));
   const body: Record<string, unknown> = {
     data: [
       {
-        event_name: "Lead",
+        event_name: ev.event_name,
         event_time: Math.floor(Date.now() / 1000),
-        event_id: lead.event_id, // mesmo id que o Pixel do navegador usaria → deduplicação
+        event_id: ev.event_id,
         action_source: "website",
-        event_source_url: lead.event_source_url ?? undefined,
-        user_data,
-        custom_data: { lead_source: lead.lead_source, channel: lead.channel, content_name: lead.lead_source },
+        event_source_url: ev.event_source_url ?? undefined,
+        user_data: await userData(ev.user),
+        custom_data: Object.keys(custom).length ? custom : undefined,
       },
     ],
   };

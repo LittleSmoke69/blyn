@@ -107,19 +107,130 @@ if (CONFIG.apiBase && TRACKING.newSession) {
   }).catch(() => { /* rastreamento nunca atrapalha a visita */ });
 }
 
+/* ---------- Meta Pixel: lead e eventos personalizados ----------
+   O Pixel é carregado no <head> (index.html). A config pública (nome do
+   evento de lead e liga/desliga dos personalizados) vem do painel admin
+   (/admin/marketing > Configuração). Todo evento leva um eventID; o mesmo id
+   vai pro servidor, que manda o evento pela Conversions API — a Meta
+   deduplica e conta uma vez só. */
+const PIXEL = { pixelId: "881767361592375", leadEvent: "Lead", customEvents: true };
+const STANDARD_EVENTS = new Set(["Lead", "Contact", "CompleteRegistration", "Schedule", "SubmitApplication", "StartTrial",
+  "Subscribe", "ViewContent", "Search", "FindLocation", "CustomizeProduct", "Donate", "AddToCart", "AddToWishlist",
+  "AddPaymentInfo", "InitiateCheckout", "Purchase"]);
+
+if (CONFIG.apiBase) {
+  fetch(`${CONFIG.apiBase}/rest/v1/rpc/public_tracking_config`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((cfg) => {
+      if (!cfg) return;
+      if (cfg.pixel_id) PIXEL.pixelId = cfg.pixel_id;
+      if (cfg.lead_event_name) PIXEL.leadEvent = cfg.lead_event_name;
+      PIXEL.customEvents = cfg.custom_events !== false;
+    })
+    .catch(() => { /* fica com o padrão */ });
+}
+
+const newEventId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+
+/** Parâmetros de origem que vão em todo evento (UTMs e ids de anúncio do último toque). */
+function originParams() {
+  const t = TRACKING.data().last_touch || {};
+  const out = {};
+  for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "campaign_id", "adset_id", "ad_id", "placement"]) {
+    if (t[k]) out[k] = t[k];
+  }
+  return out;
+}
+
+function fbqSend(name, params, eventId) {
+  if (!window.fbq) return;
+  window.fbq(STANDARD_EVENTS.has(name) ? "track" : "trackCustom", name, params, { eventID: eventId });
+}
+
+/** Evento de engajamento: Pixel no navegador + registro/CAPI no servidor. */
+function trackEvent(name, data = {}) {
+  if (!PIXEL.customEvents) return;
+  const eventId = newEventId();
+  fbqSend(name, { ...data, ...originParams() }, eventId);
+  if (!CONFIG.apiBase) return;
+  fetch(`${CONFIG.apiBase}/functions/v1/track-visit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tracking: TRACKING.data(), event: { name, event_id: eventId, data } }),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 function sendLead(form, data) {
-  // Mesmo event_id no Pixel (navegador) e na Conversions API (servidor):
-  // a Meta conta um lead só, mesmo recebendo pelos dois caminhos.
-  const eventId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  if (window.fbq) window.fbq("track", "Lead", { content_name: form.dataset.leadSource || "landing" }, { eventID: eventId });
+  const source = form.dataset.leadSource || "landing";
+  const eventId = newEventId();
+
+  if (window.fbq) {
+    // Correspondência avançada: o Pixel normaliza e aplica hash SHA-256 no
+    // navegador antes de enviar (e-mail, telefone, nome, id do visitante).
+    const [fn, ...rest] = String(data.nome || "").trim().toLowerCase().split(/\s+/);
+    const digits = String(data.whatsapp || "").replace(/\D/g, "");
+    const userData = { country: "br", external_id: TRACKING.data().visitor_id };
+    if (data.email) userData.em = String(data.email).trim().toLowerCase();
+    if (digits) userData.ph = digits.length <= 11 ? `55${digits}` : digits;
+    if (fn) userData.fn = fn;
+    if (rest.length) userData.ln = rest[rest.length - 1];
+    window.fbq("init", PIXEL.pixelId, userData);
+
+    // Respostas do formulário (sem nome/e-mail/WhatsApp, que já foram na
+    // correspondência avançada) + origem da visita.
+    const answers = Object.fromEntries(Object.entries(data)
+      .filter(([k, v]) => v && !["nome", "email", "whatsapp", "website"].includes(k))
+      .map(([k, v]) => [k, String(v).slice(0, 200)]));
+    fbqSend(PIXEL.leadEvent, { content_name: source, content_category: "demonstracao", lead_source: source, ...answers, ...originParams() }, eventId);
+  }
+
   if (!CONFIG.apiBase) return;
   // keepalive: o envio continua mesmo com a aba do WhatsApp abrindo por cima.
   fetch(`${CONFIG.apiBase}/functions/v1/submit-lead`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...data, source: form.dataset.leadSource || "landing", utm: TRACKING.utm, tracking: TRACKING.data(), event_id: eventId }),
+    body: JSON.stringify({ ...data, source, utm: TRACKING.utm, tracking: TRACKING.data(), event_id: eventId }),
     keepalive: true,
   }).catch(() => { /* o WhatsApp já abriu; não bloqueia o visitante */ });
+}
+
+/* Eventos de engajamento da landing */
+document.addEventListener("click", (e) => {
+  const a = e.target instanceof Element ? e.target.closest("a") : null;
+  if (!a) return;
+  const label = (a.textContent || "").trim().replace(/\s+/g, " ").slice(0, 80);
+  if (a.matches("[data-whats-link], a[href*='wa.me'], a[href*='whatsapp.com']")) trackEvent("Contact", { method: "whatsapp", label });
+  else if (a.getAttribute("href") === "#form-hero") trackEvent("ClickCTA", { label });
+  else if (a.getAttribute("href")?.startsWith("/app")) trackEvent("ClickLogin", { label });
+}, true);
+
+const startedForms = new Set();
+document.addEventListener("focusin", (e) => {
+  const form = e.target instanceof Element ? e.target.closest("[data-whats-form]") : null;
+  if (!form || startedForms.has(form)) return;
+  startedForms.add(form);
+  trackEvent("FormStart", { form: form.dataset.leadSource || "landing" });
+});
+
+{
+  const marks = [50, 90];
+  const fired = new Set();
+  addEventListener("scroll", () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    if (max <= 0) return;
+    const pct = (scrollY / max) * 100;
+    for (const m of marks) if (pct >= m && !fired.has(m)) { fired.add(m); trackEvent("ScrollDepth", { percent: m }); }
+  }, { passive: true });
+  // Visitante engajado: 30 s com a aba visível.
+  let visibleMs = 0;
+  let last = Date.now();
+  const tick = setInterval(() => {
+    const now = Date.now();
+    if (document.visibilityState === "visible") visibleMs += now - last;
+    last = now;
+    if (visibleMs >= 30000) { clearInterval(tick); trackEvent("Engaged", { seconds: 30 }); }
+  }, 1000);
 }
 
 const $ = (s, c = document) => c.querySelector(s);

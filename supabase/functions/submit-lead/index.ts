@@ -22,7 +22,7 @@
 // Conversions API da Meta, se estiver ligada no painel (/admin/marketing).
 import { attributionColumns, parseTracking } from "../_shared/attribution.ts";
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
-import { loadMetaSettings, sendCapiLead } from "../_shared/meta.ts";
+import { loadMetaSettings, sendCapiEvent } from "../_shared/meta.ts";
 import { getAdminClient } from "../_shared/supabaseAdmin.ts";
 
 interface FormField {
@@ -226,20 +226,43 @@ Deno.serve(async (req) => {
   try {
     const meta = await loadMetaSettings(admin);
     if (meta.capi_enabled) {
-      const status = await sendCapiLead(meta, {
-        // event_id do navegador (o mesmo do fbq Lead) pra Meta deduplicar.
+      // Todas as respostas do formulário (menos nome/e-mail/WhatsApp, que vão
+      // com hash em user_data) + origem da visita, como parâmetros do evento.
+      const formData = Object.fromEntries(
+        answers.filter((a) => !["nome", "email", "whatsapp"].includes(a.key)).map((a) => [a.key, a.value]),
+      );
+      const status = await sendCapiEvent(meta, {
+        event_name: meta.lead_event_name,
+        // event_id do navegador (o mesmo do fbq) pra Meta deduplicar.
         event_id: typeof payload.event_id === "string" && /^[\w-]{8,64}$/.test(payload.event_id) ? payload.event_id : lead.id,
         event_source_url: tracking.page,
-        email,
-        phone: whatsapp,
-        name,
-        ip: attribution.ip,
-        user_agent: attribution.user_agent,
-        fbp: attribution.fbp,
-        fbc: attribution.fbc,
-        external_id: tracking.visitor_id,
-        lead_source: source,
-        channel: attribution.channel,
+        user: {
+          email,
+          phone: whatsapp,
+          name,
+          ip: attribution.ip,
+          user_agent: attribution.user_agent,
+          fbp: attribution.fbp,
+          fbc: attribution.fbc,
+          external_id: tracking.visitor_id,
+        },
+        custom_data: {
+          content_name: source,
+          content_category: "demonstracao",
+          lead_source: source,
+          lead_id: lead.id,
+          channel: attribution.channel,
+          utm_source: attribution.utm_source,
+          utm_medium: attribution.utm_medium,
+          utm_campaign: attribution.utm_campaign,
+          utm_content: attribution.utm_content,
+          utm_term: attribution.utm_term,
+          campaign_id: attribution.meta_campaign_id,
+          adset_id: attribution.meta_adset_id,
+          ad_id: attribution.meta_ad_id,
+          device: attribution.device,
+          ...formData,
+        },
       });
       await admin.from("crm_leads").update({ capi_status: status, capi_sent_at: new Date().toISOString() }).eq("id", lead.id);
     }

@@ -8,16 +8,17 @@
 // Ações (admin logado):
 //   - get:       configuração atual (sem o token)
 //   - update:    access_token / clear_token, ad_account_id, pixel_id,
-//                api_version, capi_enabled, capi_test_event_code, sync_days, auto_sync
+//                api_version, capi_enabled, capi_test_event_code, sync_days, auto_sync,
+//                lead_event_name, custom_events_enabled, capi_custom_events
 //   - test:      confere o token e a conta de anúncios
 //   - sync:      puxa campanhas, conjuntos, anúncios + criativos e métricas
 //                diárias dos últimos `days` (padrão: sync_days)
-//   - test_capi: manda um evento Lead de teste pra Conversions API
+//   - test_capi: manda um evento de lead de teste pra Conversions API
 //
 // O pg_cron (meta_cron_sync) também chama `sync`, autenticando pelo header
 // x-cron-secret em vez de JWT de admin.
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
-import { graphGet, graphGetAll, loadMetaSettings, MetaApiError, sendCapiLead, type MetaSettings } from "../_shared/meta.ts";
+import { graphGet, graphGetAll, loadMetaSettings, MetaApiError, sendCapiEvent, type MetaSettings } from "../_shared/meta.ts";
 import { AdminAuthError, requireAdmin } from "../_shared/requireAdmin.ts";
 import { getAdminClient } from "../_shared/supabaseAdmin.ts";
 
@@ -34,6 +35,9 @@ interface Payload {
   capi_test_event_code?: string;
   sync_days?: number;
   auto_sync?: boolean;
+  lead_event_name?: string;
+  custom_events_enabled?: boolean;
+  capi_custom_events?: boolean;
   days?: number;
 }
 
@@ -48,6 +52,9 @@ function publicView(s: MetaSettings) {
     capi_test_event_code: s.capi_test_event_code,
     sync_days: s.sync_days,
     auto_sync: s.auto_sync,
+    lead_event_name: s.lead_event_name,
+    custom_events_enabled: s.custom_events_enabled,
+    capi_custom_events: s.capi_custom_events,
     last_sync_at: s.last_sync_at,
     last_sync_error: s.last_sync_error,
   };
@@ -218,6 +225,13 @@ Deno.serve(async (req) => {
     if (typeof payload.capi_enabled === "boolean") update.capi_enabled = payload.capi_enabled;
     if (typeof payload.capi_test_event_code === "string") update.capi_test_event_code = payload.capi_test_event_code.trim().slice(0, 40) || null;
     if (typeof payload.auto_sync === "boolean") update.auto_sync = payload.auto_sync;
+    if (typeof payload.custom_events_enabled === "boolean") update.custom_events_enabled = payload.custom_events_enabled;
+    if (typeof payload.capi_custom_events === "boolean") update.capi_custom_events = payload.capi_custom_events;
+    if (typeof payload.lead_event_name === "string") {
+      const name = payload.lead_event_name.trim();
+      if (!/^[A-Za-z][A-Za-z0-9_]{1,39}$/.test(name)) return jsonResponse({ error: "nome do evento: letras, números e _ (até 40)" }, 400);
+      update.lead_event_name = name;
+    }
     if (payload.sync_days !== undefined) {
       const d = Number(payload.sync_days);
       if (!Number.isInteger(d) || d < 1 || d > 365) return jsonResponse({ error: "dias de sincronização: entre 1 e 365" }, 400);
@@ -241,19 +255,20 @@ Deno.serve(async (req) => {
     }
 
     if (payload.action === "test_capi") {
-      const status = await sendCapiLead({ ...settings, capi_enabled: true }, {
+      const status = await sendCapiEvent({ ...settings, capi_enabled: true }, {
+        event_name: settings.lead_event_name,
         event_id: crypto.randomUUID(),
         event_source_url: "https://blynassessoria.com.br/",
-        email: "teste@blynassessoria.com.br",
-        phone: null,
-        name: "Teste Blyn",
-        ip: null,
-        user_agent: req.headers.get("user-agent"),
-        fbp: null,
-        fbc: null,
-        external_id: null,
-        lead_source: "teste_painel",
-        channel: "teste",
+        user: {
+          email: "teste@blynassessoria.com.br",
+          name: "Teste Blyn",
+          ip: null,
+          user_agent: req.headers.get("user-agent"),
+          fbp: null,
+          fbc: null,
+          external_id: null,
+        },
+        custom_data: { content_name: "teste_painel", lead_source: "teste_painel" },
       });
       return jsonResponse({ ok: status === "enviado", status, test_event_code: settings.capi_test_event_code });
     }

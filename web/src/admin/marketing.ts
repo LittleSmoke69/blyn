@@ -150,7 +150,28 @@ export interface MetaSettingsView {
   auto_sync: boolean;
   last_sync_at: string | null;
   last_sync_error: string | null;
+  lead_event_name: string;
+  custom_events_enabled: boolean;
+  capi_custom_events: boolean;
 }
+
+export interface EventSummary {
+  day: string;
+  name: string;
+  channel: string | null;
+  events: number;
+  visitors: number;
+}
+
+/** Eventos que a landing dispara no Pixel (landing/main.js) — além do lead. */
+export const SITE_EVENTS: { name: string; label: string; kind: "padrão" | "personalizado" }[] = [
+  { name: "Contact", label: "Clique no WhatsApp", kind: "padrão" },
+  { name: "ClickCTA", label: "Clique em “Agendar demonstração”", kind: "personalizado" },
+  { name: "FormStart", label: "Começou a preencher o formulário", kind: "personalizado" },
+  { name: "ClickLogin", label: "Clique em “Entrar”", kind: "personalizado" },
+  { name: "ScrollDepth", label: "Rolou 50% / 90% da página", kind: "personalizado" },
+  { name: "Engaged", label: "30 s na página com a aba visível", kind: "personalizado" },
+];
 
 export async function callMeta<T = unknown>(body: Record<string, unknown>): Promise<{ data?: T; error?: string }> {
   const { data, error } = await supabase.functions.invoke("admin-meta", { body });
