@@ -17,17 +17,95 @@ const CONFIG = {
   apiBase: "https://blynassessoria.com.br/api",
 };
 
-/* UTMs da visita, guardadas pra acompanhar o lead até o envio do formulário */
-const UTM = (() => {
+/* ---------- rastreamento de origem (anúncios e orgânico) ----------
+   Guarda, por visitante, o PRIMEIRO e o ÚLTIMO toque: UTMs, click ids
+   (fbclid, gclid, ttclid...), ids dinâmicos da Meta (campaign_id, adset_id,
+   ad_id, placement) e o referrer. Sessão nova sem UTM e sem referrer externo
+   (visita direta) não apaga o último toque conhecido.
+   Cookies primários da Meta: _fbp (criado aqui se não existir) e _fbc
+   (a partir do fbclid). Vão com o lead pra Conversions API.
+   O canal (Meta Ads, Google Ads, orgânico busca/social, direto...) é
+   classificado no servidor (track-visit / submit-lead). */
+const TRACKING = (() => {
+  const TOUCH_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "utm_id",
+    "fbclid", "gclid", "gbraid", "wbraid", "ttclid", "msclkid", "li_fat_id",
+    "campaign_id", "adset_id", "ad_id", "placement", "site_source_name"];
+  const FIRST_TOUCH_TTL = 90 * 86400000;
+  const store = {
+    get(area, k) { try { return JSON.parse(window[area].getItem(k) || "null"); } catch { return null; } },
+    set(area, k, v) { try { window[area].setItem(k, JSON.stringify(v)); } catch { /* modo privado */ } },
+  };
+  const uuid = () => (crypto.randomUUID ? crypto.randomUUID()
+    : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
+  const cookie = (name) => document.cookie.split("; ").find((c) => c.startsWith(name + "="))?.split("=").slice(1).join("=") || null;
+  const rootDomain = location.hostname.replace(/^www\./, "");
+  const setCookie = (name, value, days) => {
+    document.cookie = `${name}=${value}; max-age=${days * 86400}; path=/; domain=.${rootDomain}; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+  };
+
   const params = new URLSearchParams(location.search);
-  const fresh = Object.fromEntries([...params].filter(([k]) => k.startsWith("utm_")));
-  try {
-    if (Object.keys(fresh).length) sessionStorage.setItem("blyn_utm", JSON.stringify(fresh));
-    return JSON.parse(sessionStorage.getItem("blyn_utm") || "null");
-  } catch {
-    return Object.keys(fresh).length ? fresh : null;
+  const touch = Object.fromEntries(TOUCH_PARAMS.filter((k) => params.get(k)).map((k) => [k, params.get(k).slice(0, 300)]));
+  let externalRef = "";
+  try { externalRef = document.referrer && new URL(document.referrer).hostname.replace(/^www\./, "") !== rootDomain ? document.referrer : ""; } catch { /* referrer inválido */ }
+  const hasNewTouch = Object.keys(touch).length > 0 || !!externalRef;
+  if (hasNewTouch) Object.assign(touch, { referrer: externalRef || undefined, landing_page: location.href.slice(0, 1000), ts: new Date().toISOString() });
+
+  let visitorId = store.get("localStorage", "blyn_vid");
+  if (!visitorId) { visitorId = uuid(); store.set("localStorage", "blyn_vid", visitorId); }
+  let sessionId = store.get("sessionStorage", "blyn_sid");
+  const newSession = !sessionId;
+  if (newSession) { sessionId = uuid(); store.set("sessionStorage", "blyn_sid", sessionId); }
+
+  let first = store.get("localStorage", "blyn_ft");
+  if (first && Date.now() - Date.parse(first.ts) > FIRST_TOUCH_TTL) first = null;
+  let last = store.get("localStorage", "blyn_lt");
+  if (hasNewTouch) {
+    last = touch;
+    store.set("localStorage", "blyn_lt", last);
+    if (!first) { first = touch; store.set("localStorage", "blyn_ft", first); }
+  } else if (!first) {
+    first = { landing_page: location.href.slice(0, 1000), ts: new Date().toISOString() };
+    store.set("localStorage", "blyn_ft", first);
   }
+  // Sessão nova "direta": o último toque continua sendo a última origem real,
+  // mas a página de entrada desta sessão é registrada.
+  if (!last) last = { landing_page: location.href.slice(0, 1000), ts: new Date().toISOString() };
+
+  let fbp = cookie("_fbp");
+  if (!fbp) { fbp = `fb.1.${Date.now()}.${Math.floor(Math.random() * 9e9) + 1e9}`; setCookie("_fbp", fbp, 90); }
+  let fbc = cookie("_fbc");
+  if (params.get("fbclid") && !(fbc && fbc.endsWith("." + params.get("fbclid")))) {
+    fbc = `fb.1.${Date.now()}.${params.get("fbclid")}`;
+    setCookie("_fbc", fbc, 90);
+  }
+
+  const data = () => ({
+    visitor_id: visitorId,
+    session_id: sessionId,
+    first_touch: first,
+    last_touch: last,
+    page: location.href.slice(0, 1000),
+    fbp,
+    fbc,
+    ga: cookie("_ga"),
+    language: navigator.language,
+    screen: `${screen.width}x${screen.height}`,
+    viewport: `${innerWidth}x${innerHeight}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    platform: navigator.userAgentData?.platform || navigator.platform || null,
+  });
+
+  return { data, newSession, utm: Object.fromEntries(Object.entries(last).filter(([k]) => k.startsWith("utm_"))) };
 })();
+
+if (CONFIG.apiBase && TRACKING.newSession) {
+  fetch(`${CONFIG.apiBase}/functions/v1/track-visit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tracking: TRACKING.data() }),
+    keepalive: true,
+  }).catch(() => { /* rastreamento nunca atrapalha a visita */ });
+}
 
 function sendLead(form, data) {
   if (!CONFIG.apiBase) return;
@@ -35,7 +113,7 @@ function sendLead(form, data) {
   fetch(`${CONFIG.apiBase}/functions/v1/submit-lead`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...data, source: form.dataset.leadSource || "landing", utm: UTM }),
+    body: JSON.stringify({ ...data, source: form.dataset.leadSource || "landing", utm: TRACKING.utm, tracking: TRACKING.data() }),
     keepalive: true,
   }).catch(() => { /* o WhatsApp já abriu; não bloqueia o visitante */ });
 }

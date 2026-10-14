@@ -6,6 +6,7 @@ import { AdminCrm } from "./admin/AdminCrm";
 import { AdminEvents } from "./admin/AdminEvents";
 import { AdminForms } from "./admin/AdminForms";
 import { AdminLayout } from "./admin/AdminLayout";
+import { AdminMarketing } from "./admin/AdminMarketing";
 import { AdminOverview } from "./admin/AdminOverview";
 import { AdminPlans } from "./admin/AdminPlans";
 import { AdminTasks } from "./admin/AdminTasks";
@@ -92,6 +93,7 @@ function Gate() {
           <Route index element={<AdminOverview />} />
           <Route path="crm" element={<AdminCrm />} />
           <Route path="tasks" element={<AdminTasks />} />
+          <Route path="marketing" element={<AdminMarketing />} />
           <Route path="accounts" element={<AdminAccounts />} />
           <Route path="plans" element={<AdminPlans />} />
           <Route path="ai" element={<AdminAi />} />

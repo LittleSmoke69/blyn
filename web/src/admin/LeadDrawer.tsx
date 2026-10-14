@@ -4,6 +4,7 @@ import { Field, Modal, inputClass, primaryButton, secondaryButton } from "../com
 import { useAuth } from "../lib/auth";
 import { formatDate, formatDateTime } from "../lib/format";
 import { supabase } from "../lib/supabase";
+import { LeadOriginSection } from "./LeadOrigin";
 import {
   ACTIVITY_LABEL,
   LEAD_SELECT,
@@ -258,6 +259,8 @@ export function LeadDrawer({
                   )}
                 </section>
               )}
+
+              <LeadOriginSection leadId={lead.id} />
 
               <form onSubmit={saveDetails} className="bg-card border border-border rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <h3 className="col-span-full text-sm uppercase tracking-wide text-muted">Dados do lead</h3>

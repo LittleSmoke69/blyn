@@ -381,6 +381,15 @@ verify_jwt = false
 [functions.mercado-pago-webhook-test]
 verify_jwt = false
 
+# Início de sessão na landing (origem da visita) — visitante anônimo.
+[functions.track-visit]
+verify_jwt = false
+
+# Chamada pelo painel (JWT de admin, conferido dentro da função) e pelo
+# pg_cron (header x-cron-secret, sem JWT).
+[functions.admin-meta]
+verify_jwt = false
+
 # O gateway recebe tanto chamadas anônimas (signup, cardápio público) quanto
 # autenticadas (CRUD do dashboard) — ele mesmo decide o que fazer com o
 # Authorization recebido e repassa pro Kong; não faz sentido o edge runtime

@@ -14,7 +14,15 @@
 //   - limites de tamanho por campo e validação de e-mail/WhatsApp;
 //   - deduplicação: mesmo e-mail (ou WhatsApp) com lead ainda aberto não cria
 //     lead novo — vira uma atividade "formulário" no lead existente.
+//
+// Atribuição: a landing manda `tracking` (primeiro/último toque com UTMs,
+// click ids e ids de anúncio da Meta, _fbp/_fbc, visitante/sessão, tela,
+// idioma); IP e user-agent vêm dos headers. O canal é classificado aqui
+// (_shared/attribution.ts). Lead novo também vira evento "Lead" na
+// Conversions API da Meta, se estiver ligada no painel (/admin/marketing).
+import { attributionColumns, parseTracking } from "../_shared/attribution.ts";
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { loadMetaSettings, sendCapiLead } from "../_shared/meta.ts";
 import { getAdminClient } from "../_shared/supabaseAdmin.ts";
 
 interface FormField {
@@ -133,12 +141,25 @@ Deno.serve(async (req) => {
         )
       : null;
 
+  const tracking = parseTracking(payload.tracking);
+  const attribution = attributionColumns(req, tracking);
+  const trackingJson = {
+    ...tracking,
+    ip: attribution.ip,
+    user_agent: attribution.user_agent,
+    accept_language: req.headers.get("accept-language")?.slice(0, 200) ?? null,
+    submitted_at: new Date().toISOString(),
+  };
+  const originLine = `Origem: ${attribution.channel}${attribution.utm_source ? ` · ${attribution.utm_source}` : ""}${
+    attribution.utm_campaign ? ` / ${attribution.utm_campaign}` : ""
+  }`;
+
   const summary = [`Formulário (${source})`, ...answers.filter((a) => a.key !== "nome").map((a) => `${a.label}: ${a.value}`)].join("\n");
 
   // Dedupe: mesmo contato com lead ainda aberto.
   let existingQuery = admin
     .from("crm_leads")
-    .select("id, whatsapp, business_name, instagram, challenge, answers")
+    .select("id, whatsapp, business_name, instagram, challenge, answers, channel, tracking")
     .not("stage", "in", "(ganho,perdido)")
     .order("created_at", { ascending: false })
     .limit(1);
@@ -154,13 +175,15 @@ Deno.serve(async (req) => {
     if (!existing.instagram && columns.instagram) patch.instagram = columns.instagram;
     if (!existing.challenge && columns.challenge) patch.challenge = columns.challenge;
     if (!existing.answers) patch.answers = answers;
+    // Lead criado antes do rastreamento (ou manual): completa a origem.
+    if (!existing.tracking) Object.assign(patch, attribution, { tracking: trackingJson, visitor_id: tracking.visitor_id, session_id: tracking.session_id });
     if (Object.keys(patch).length > 0) {
       await admin.from("crm_leads").update(patch).eq("id", existing.id);
     }
     await admin.from("crm_activities").insert({
       lead_id: existing.id,
       type: "formulario",
-      content: `Novo envio do formulário.\n${summary}`,
+      content: `Novo envio do formulário.\n${summary}\n${originLine}`,
     });
     return jsonResponse({ ok: true });
   }
@@ -184,6 +207,10 @@ Deno.serve(async (req) => {
       answers,
       source,
       utm,
+      ...attribution,
+      visitor_id: tracking.visitor_id,
+      session_id: tracking.session_id,
+      tracking: trackingJson,
       position: (top?.position ?? 0) - 1,
     })
     .select("id")
@@ -193,7 +220,33 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "falha ao registrar contato" }, 500);
   }
 
-  await admin.from("crm_activities").insert({ lead_id: lead.id, type: "formulario", content: summary });
+  await admin.from("crm_activities").insert({ lead_id: lead.id, type: "formulario", content: `${summary}\n${originLine}` });
 
-  return jsonResponse({ ok: true }, 201);
+  // Conversions API: nunca derruba o envio do formulário se a Meta falhar.
+  try {
+    const meta = await loadMetaSettings(admin);
+    if (meta.capi_enabled) {
+      const status = await sendCapiLead(meta, {
+        event_id: lead.id,
+        event_source_url: tracking.page,
+        email,
+        phone: whatsapp,
+        name,
+        ip: attribution.ip,
+        user_agent: attribution.user_agent,
+        fbp: attribution.fbp,
+        fbc: attribution.fbc,
+        external_id: tracking.visitor_id,
+        lead_source: source,
+        channel: attribution.channel,
+      });
+      await admin.from("crm_leads").update({ capi_status: status, capi_sent_at: new Date().toISOString() }).eq("id", lead.id);
+    }
+  } catch (err) {
+    console.error("CAPI falhou:", err instanceof Error ? err.message : err);
+  }
+
+  // event_id devolvido pro navegador: se um Pixel for instalado na landing,
+  // o fbq('track','Lead',{}, {eventID}) usa o mesmo id e a Meta deduplica.
+  return jsonResponse({ ok: true, event_id: lead.id }, 201);
 });
