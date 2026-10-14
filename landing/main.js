@@ -108,12 +108,16 @@ if (CONFIG.apiBase && TRACKING.newSession) {
 }
 
 function sendLead(form, data) {
+  // Mesmo event_id no Pixel (navegador) e na Conversions API (servidor):
+  // a Meta conta um lead só, mesmo recebendo pelos dois caminhos.
+  const eventId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  if (window.fbq) window.fbq("track", "Lead", { content_name: form.dataset.leadSource || "landing" }, { eventID: eventId });
   if (!CONFIG.apiBase) return;
   // keepalive: o envio continua mesmo com a aba do WhatsApp abrindo por cima.
   fetch(`${CONFIG.apiBase}/functions/v1/submit-lead`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...data, source: form.dataset.leadSource || "landing", utm: TRACKING.utm, tracking: TRACKING.data() }),
+    body: JSON.stringify({ ...data, source: form.dataset.leadSource || "landing", utm: TRACKING.utm, tracking: TRACKING.data(), event_id: eventId }),
     keepalive: true,
   }).catch(() => { /* o WhatsApp já abriu; não bloqueia o visitante */ });
 }

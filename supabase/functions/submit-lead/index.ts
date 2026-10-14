@@ -227,7 +227,8 @@ Deno.serve(async (req) => {
     const meta = await loadMetaSettings(admin);
     if (meta.capi_enabled) {
       const status = await sendCapiLead(meta, {
-        event_id: lead.id,
+        // event_id do navegador (o mesmo do fbq Lead) pra Meta deduplicar.
+        event_id: typeof payload.event_id === "string" && /^[\w-]{8,64}$/.test(payload.event_id) ? payload.event_id : lead.id,
         event_source_url: tracking.page,
         email,
         phone: whatsapp,
@@ -246,7 +247,5 @@ Deno.serve(async (req) => {
     console.error("CAPI falhou:", err instanceof Error ? err.message : err);
   }
 
-  // event_id devolvido pro navegador: se um Pixel for instalado na landing,
-  // o fbq('track','Lead',{}, {eventID}) usa o mesmo id e a Meta deduplica.
-  return jsonResponse({ ok: true, event_id: lead.id }, 201);
+  return jsonResponse({ ok: true }, 201);
 });
